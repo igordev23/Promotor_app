@@ -1,49 +1,75 @@
 import React from "react";
-import { Button, Input, VStack, Text, Center } from "gluestack-ui";
-import { useLoginViewModel } from "../viewmodel/useLoginViewModel";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { Pressable } from "@/components/ui/pressable";
 
-const LoginView: React.FC = () => {
-  const { state, actions } = useLoginViewModel();
+import { HStack } from "@/components/ui/hstack";
 
+const LoginScreen: React.FC = () => {
   return (
-    <Center flex={1} bg="white">
-      <VStack space="4" w="80%">
-        <Text fontSize="2xl" fontWeight="bold" textAlign="center">
+    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
+      <Box w="80%" bg="gray.100" p="4" borderRadius="md" shadow="2">
+        <Text fontSize="2xl" fontWeight="bold" textAlign="center" mb="4">
           Bem-vindo ao Promotor App
         </Text>
 
-        <Input
-          placeholder="Email"
-          value={state.email}
-          onChangeText={actions.setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Input
-          placeholder="Senha"
-          value={state.password}
-          onChangeText={actions.setPassword}
-          secureTextEntry
-        />
-
-        {state.error && (
-          <Text color="red.500" textAlign="center">
-            {state.error}
+        <Box mb="4">
+          <Text fontSize="md" mb="2">
+            Email
           </Text>
-        )}
+          <Box
+            as="input"
+            type="email"
+            placeholder="Digite seu email"
+            w="100%"
+            p="2"
+            borderWidth="1"
+            borderColor="gray.300"
+            borderRadius="md"
+          />
+        </Box>
 
-        <Button
-          isLoading={state.isLoading}
-          onPress={actions.login}
+        <Box mb="4">
+          <Text fontSize="md" mb="2">
+            Senha
+          </Text>
+          <Box
+            as="input"
+            type="password"
+            placeholder="Digite sua senha"
+            w="100%"
+            p="2"
+            borderWidth="1"
+            borderColor="gray.300"
+            borderRadius="md"
+          />
+        </Box>
+
+        <Pressable
           bg="blue.500"
-          _text={{ color: "white" }}
+          p="3"
+          borderRadius="md"
+          alignItems="center"
+          justifyContent="center"
+          _hover={{ bg: "blue.600" }}
+          _pressed={{ bg: "blue.700" }}
         >
-          Entrar
-        </Button>
-      </VStack>
-    </Center>
+          <Text color="white" fontWeight="bold">
+            Entrar
+          </Text>
+        </Pressable>
+
+        <HStack justifyContent="center" mt="4">
+          <Text fontSize="sm">Não tem uma conta?</Text>
+          <Pressable onPress={() => alert("Navegar para registro")}>
+            <Text fontSize="sm" color="blue.500" ml="1">
+              Registre-se
+            </Text>
+          </Pressable>
+        </HStack>
+      </Box>
+    </Box>
   );
 };
 
-export default LoginView;
+export default LoginScreen;

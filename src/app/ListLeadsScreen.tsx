@@ -1,12 +1,16 @@
 import React from "react";
-import { FlatList, Text, Center, VStack, Spinner } from "gluestack-ui";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { HStack } from "@/components/ui/hstack";
+import { Spinner } from "@/components/ui/pressable";
+import { FlatList } from "react-native";
 import { useListLeadsViewModel } from "../viewmodel/useListLeadsViewModel";
 
 const ListLeadsScreen: React.FC = () => {
   const { state } = useListLeadsViewModel();
 
   return (
-    <Center flex={1} bg="white">
+    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
       {state.isLoading ? (
         <Spinner />
       ) : (
@@ -14,16 +18,16 @@ const ListLeadsScreen: React.FC = () => {
           data={state.leads}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <VStack space="2" p="4" borderBottomWidth="1" borderColor="gray.200">
+            <HStack space="2" p="4" borderBottomWidth="1" borderColor="gray.200">
               <Text fontSize="lg" fontWeight="bold">
                 {item.name}
               </Text>
               <Text>{item.email}</Text>
-            </VStack>
+            </HStack>
           )}
         />
       )}
-    </Center>
+    </Box>
   );
 };
 

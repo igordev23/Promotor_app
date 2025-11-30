@@ -2,13 +2,11 @@
   "compilerOptions": {
     "jsx": "react-native",
     "target": "esnext",
-    "module": "esnext",
+    "module": "commonjs",
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["jest"],
     "paths": {
       "@/*": [
         "./*"
@@ -18,7 +16,7 @@
       ]
     }
   },
-  "extends": "expo/tsconfig.base.json",
+  "extends": "expo/tsconfig.base",
   "include": [
     "**/*.ts",
     "**/*.tsx",

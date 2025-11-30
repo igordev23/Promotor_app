@@ -1,18 +1,20 @@
 import React from "react";
-import { Text, Center, VStack } from "gluestack-ui";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { HStack } from "@/components/ui/hstack";  
 import { useDashboardViewModel } from "../viewmodel/useDashboardViewModel";
 
 const DashboardScreen: React.FC = () => {
   const { state } = useDashboardViewModel();
 
   return (
-    <Center flex={1} bg="white">
-      <VStack space="4">
+    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
+      <HStack space="4" alignItems="center">
         <Text fontSize="2xl" fontWeight="bold">
           {state.welcomeMessage}
         </Text>
-      </VStack>
-    </Center>
+      </HStack>
+    </Box>
   );
 };
 
