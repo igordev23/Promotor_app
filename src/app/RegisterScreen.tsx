@@ -1,9 +1,9 @@
 import React from "react";
 import { Button, Input, VStack, Text, Center } from "gluestack-ui";
-import { useRegisterViewModel } from "../viewmodel/useLeadRegisterViewModel";
+import { useLeadRegisterViewModel } from "../viewmodel/useLeadRegisterViewModel";
 
 const RegisterScreen: React.FC = () => {
-  const { state, actions } = useRegisterViewModel();
+  const { state, actions } = useLeadRegisterViewModel();
 
   return (
     <Center flex={1} bg="white">
