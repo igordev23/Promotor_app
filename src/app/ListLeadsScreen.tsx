@@ -1,34 +1,54 @@
 import React from "react";
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
-import { HStack } from "@/components/ui/hstack";
-import { Spinner } from "@/components/ui/pressable";
-import { FlatList } from "react-native";
-import { useListLeadsViewModel } from "../viewmodel/useListLeadsViewModel";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+
+const mockLeads = [
+  { id: "1", name: "João Silva", email: "joao.silva@email.com" },
+  { id: "2", name: "Maria Oliveira", email: "maria.oliveira@email.com" },
+  { id: "3", name: "Carlos Santos", email: "carlos.santos@email.com" },
+];
 
 const ListLeadsScreen: React.FC = () => {
-  const { state } = useListLeadsViewModel();
+  const isLoading = false; // Simulação de estado de carregamento
 
   return (
-    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
-      {state.isLoading ? (
-        <Spinner />
+    <View style={styles.container}>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
-          data={state.leads}
+          data={mockLeads}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <HStack space="2" p="4" borderBottomWidth="1" borderColor="gray.200">
-              <Text fontSize="lg" fontWeight="bold">
-                {item.name}
-              </Text>
-              <Text>{item.email}</Text>
-            </HStack>
+            <View style={styles.leadItem}>
+              <Text style={styles.leadName}>{item.name}</Text>
+              <Text style={styles.leadEmail}>{item.email}</Text>
+            </View>
           )}
         />
       )}
-    </Box>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    padding: 16,
+  },
+  leadItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#cccccc",
+  },
+  leadName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  leadEmail: {
+    fontSize: 14,
+    color: "#666666",
+  },
+});
 
 export default ListLeadsScreen;

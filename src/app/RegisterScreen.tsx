@@ -1,95 +1,72 @@
-import React from "react";
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
-import { Pressable } from "@/components/ui/pressable";
-import { HStack } from "@/components/ui/hstack";
-import { useLeadRegisterViewModel } from "../viewmodel/useLeadRegisterViewModel";
+import React, { useState } from "react";
+import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
 
 const RegisterScreen: React.FC = () => {
-  const { state, actions } = useLeadRegisterViewModel();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = () => {
+    if (!name || !email || !password) {
+      Alert.alert("Erro", "Todos os campos são obrigatórios!");
+      return;
+    }
+    Alert.alert("Sucesso", "Registro realizado com sucesso!");
+  };
 
   return (
-    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
-      <Box w="80%" bg="gray.100" p="4" borderRadius="md" shadow="2">
-        <HStack space="4">
-          <Box>
-            <Text fontSize="md" mb="2">
-              Nome
-            </Text>
-            <Box
-              as="input"
-              type="text"
-              placeholder="Digite seu nome"
-              value={state.name}
-              onChange={(e) => actions.setName(e.target.value)}
-              w="100%"
-              p="2"
-              borderWidth="1"
-              borderColor="gray.300"
-              borderRadius="md"
-            />
-          </Box>
+    <View style={styles.container}>
+      <Text style={styles.label}>Nome</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu nome"
+        value={name}
+        onChangeText={setName}
+      />
 
-          <Box>
-            <Text fontSize="md" mb="2">
-              Email
-            </Text>
-            <Box
-              as="input"
-              type="email"
-              placeholder="Digite seu email"
-              value={state.email}
-              onChange={(e) => actions.setEmail(e.target.value)}
-              w="100%"
-              p="2"
-              borderWidth="1"
-              borderColor="gray.300"
-              borderRadius="md"
-            />
-          </Box>
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-          <Box>
-            <Text fontSize="md" mb="2">
-              Senha
-            </Text>
-            <Box
-              as="input"
-              type="password"
-              placeholder="Digite sua senha"
-              value={state.password}
-              onChange={(e) => actions.setPassword(e.target.value)}
-              w="100%"
-              p="2"
-              borderWidth="1"
-              borderColor="gray.300"
-              borderRadius="md"
-            />
-          </Box>
+      <Text style={styles.label}>Senha</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite sua senha"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
-          {state.error && (
-            <Text color="red.500" textAlign="center">
-              {state.error}
-            </Text>
-          )}
-
-          <Pressable
-            bg="blue.500"
-            p="3"
-            borderRadius="md"
-            alignItems="center"
-            justifyContent="center"
-            _hover={{ bg: "blue.600" }}
-            _pressed={{ bg: "blue.700" }}
-            onPress={actions.register}
-          >
-            <Text color="white" fontWeight="bold">
-              Registrar
-            </Text>
-          </Pressable>
-        </HStack>
-      </Box>
-    </Box>
+      <Button title="Registrar" onPress={handleRegister} />
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#ffffff",
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  input: {
+    height: 40,
+    borderColor: "#cccccc",
+    borderWidth: 1,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+});
 
 export default RegisterScreen;

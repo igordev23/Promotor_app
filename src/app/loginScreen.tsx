@@ -1,75 +1,103 @@
 import React from "react";
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
-import { Pressable } from "@/components/ui/pressable";
-
-import { HStack } from "@/components/ui/hstack";
+import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
 
 const LoginScreen: React.FC = () => {
+  const router = useRouter();
+
+  const handleLogin = () => {
+    Alert.alert("Login", "Login realizado com sucesso!");
+    router.push("/Dashboard"); // Navega para a tela "home"
+  };
+
   return (
-    <Box flex={1} bg="white" justifyContent="center" alignItems="center" p="4">
-      <Box w="80%" bg="gray.100" p="4" borderRadius="md" shadow="2">
-        <Text fontSize="2xl" fontWeight="bold" textAlign="center" mb="4">
-          Bem-vindo ao Promotor App
-        </Text>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Bem-vindo ao Promotor App</Text>
 
-        <Box mb="4">
-          <Text fontSize="md" mb="2">
-            Email
-          </Text>
-          <Box
-            as="input"
-            type="email"
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
             placeholder="Digite seu email"
-            w="100%"
-            p="2"
-            borderWidth="1"
-            borderColor="gray.300"
-            borderRadius="md"
+            keyboardType="email-address"
           />
-        </Box>
+        </View>
 
-        <Box mb="4">
-          <Text fontSize="md" mb="2">
-            Senha
-          </Text>
-          <Box
-            as="input"
-            type="password"
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Senha</Text>
+          <TextInput
+            style={styles.input}
             placeholder="Digite sua senha"
-            w="100%"
-            p="2"
-            borderWidth="1"
-            borderColor="gray.300"
-            borderRadius="md"
+            secureTextEntry
           />
-        </Box>
+        </View>
 
-        <Pressable
-          bg="blue.500"
-          p="3"
-          borderRadius="md"
-          alignItems="center"
-          justifyContent="center"
-          _hover={{ bg: "blue.600" }}
-          _pressed={{ bg: "blue.700" }}
-        >
-          <Text color="white" fontWeight="bold">
-            Entrar
+        <Button title="Entrar" onPress={handleLogin} />
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Não tem uma conta?</Text>
+          <Text
+            style={styles.registerLink}
+            onPress={() => router.push("/register")}
+          >
+            Registre-se
           </Text>
-        </Pressable>
-
-        <HStack justifyContent="center" mt="4">
-          <Text fontSize="sm">Não tem uma conta?</Text>
-          <Pressable onPress={() => alert("Navegar para registro")}>
-            <Text fontSize="sm" color="blue.500" ml="1">
-              Registre-se
-            </Text>
-          </Pressable>
-        </HStack>
-      </Box>
-    </Box>
+        </View>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 16,
+  },
+  card: {
+    width: "80%",
+    backgroundColor: "#f5f5f5",
+    padding: 16,
+    borderRadius: 8,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    paddingHorizontal: 8,
+  },
+  registerContainer: {
+    marginTop: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  registerText: {
+    fontSize: 14,
+  },
+  registerLink: {
+    fontSize: 14,
+    color: "#007BFF",
+    marginLeft: 4,
+  },
+});
 
 export default LoginScreen;
