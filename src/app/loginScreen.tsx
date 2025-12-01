@@ -5,10 +5,10 @@ import { useRouter } from "expo-router";
 const LoginScreen: React.FC = () => {
   const router = useRouter();
 
-  const handleLogin = () => {
-    Alert.alert("Login", "Login realizado com sucesso!");
-    router.push("/Dashboard"); // Navega para a tela "home"
-  };
+ const handleLogin = () => {
+  Alert.alert("Login", "Login realizado com sucesso!");
+  router.push("./DashboardScreen"); // Caminho corrigido
+};
 
   return (
     <View style={styles.container}>
@@ -39,7 +39,7 @@ const LoginScreen: React.FC = () => {
           <Text style={styles.registerText}>Não tem uma conta?</Text>
           <Text
             style={styles.registerLink}
-            onPress={() => router.push("/register")}
+            onPress={() => router.push("./RegisterScreen")}
           >
             Registre-se
           </Text>
