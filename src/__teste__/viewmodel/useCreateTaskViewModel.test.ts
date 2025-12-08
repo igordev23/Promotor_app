@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { useCreateTaskViewModel } from "../../viewmodel/useCreateTaskViewModel";
-import { taskRepository } from "../../model/repositories/taskRepository";
+import { taskRepository } from "../../model/repositories/leadRepository";
 import { Task } from "../../model/entities/Task";
 
 jest.mock("../../model/repositories/taskRepository");

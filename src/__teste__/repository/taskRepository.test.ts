@@ -1,4 +1,4 @@
-import { taskRepository } from "../../model/repositories/taskRepository";
+import { taskRepository } from "../../model/repositories/leadRepository";
 
 /**
  * Testes reais do repositório usando o AsyncStorage verdadeiro.
