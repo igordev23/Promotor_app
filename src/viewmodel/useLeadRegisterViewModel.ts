@@ -1,6 +1,7 @@
 import { ILeadRepository } from "../model/repositories/ILeadRepository";
 import { Lead } from "../model/entities/Lead";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { LeadUseCase } from "../model/useCases/LeadUseCase";
 
 export type LeadRegisterState = {
   leads: Lead[];
@@ -17,33 +18,20 @@ export type LeadRegisterActions = {
 export const useLeadRegisterViewModel = (
   repository: ILeadRepository
 ): { state: LeadRegisterState; actions: LeadRegisterActions } => {
+  const leadUseCase = useMemo(() => new LeadUseCase(repository), [repository]);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
-
-  const parseError = (err: unknown, fallback = "Ocorreu um erro"): string => {
-    if (!err) return fallback;
-    if (typeof err === "string") return err;
-    if (err instanceof Error) return err.message || fallback;
-    if (typeof err === "object" && err !== null && "message" in (err as any)) {
-      const m = (err as any).message;
-      return typeof m === "string" ? m : fallback;
-    }
-    try {
-      return JSON.stringify(err) || fallback;
-    } catch {
-      return fallback;
-    }
-  };
 
   const loadLeads = async () => {
     setLoading(true);
     setError(null);
     try {
-      const all = await repository.getAll();
+      const all = await leadUseCase.getLeads();
       setLeads(all);
     } catch (err: unknown) {
-      setError(parseError(err, "Erro ao carregar leads"));
+      setError(leadUseCase.parseError(err, "Erro ao carregar leads"));
     } finally {
       setLoading(false);
     }
@@ -56,24 +44,37 @@ export const useLeadRegisterViewModel = (
   const registerLead = async (data: Omit<Lead, "id">) => {
     setError(null);
 
-    // validação antes de mostrar loading
-    if (
-      !data.nome?.trim() ||
-      !data.email?.trim() ||
-      !data.cpf?.trim() ||
-      !data.telefone?.trim()
-    ) {
-      setError("Preencha todos os campos");
+    // validação
+    if (!data.nome?.trim()) {
+      setError("Nome é obrigatório");
+      return;
+    }
+    if (!data.cpf?.trim()) {
+      setError("CPF é obrigatório");
+      return;
+    }
+    const cleanCpf = data.cpf.replace(/\D/g, "");
+    if (cleanCpf.length !== 11) {
+      setError("CPF deve ter 11 dígitos");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      setError("Email inválido");
+      return;
+    }
+    if (!data.telefone?.trim()) {
+      setError("Telefone é obrigatório");
       return;
     }
 
     setLoading(true);
     try {
-      const newLead = await repository.create(data);
+      const newLead = await leadUseCase.createLead(data);
       // atualiza estado local para UI refletir imediatamente
       setLeads((prev) => [...prev, newLead]);
     } catch (err: unknown) {
-      setError(parseError(err, "Erro ao cadastrar lead"));
+      setError(leadUseCase.parseError(err, "Erro ao cadastrar lead"));
     } finally {
       setLoading(false);
     }
