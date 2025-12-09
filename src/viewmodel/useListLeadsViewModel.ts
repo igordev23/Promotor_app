@@ -1,4 +1,4 @@
-import { LeadUseCase } from "../model/useCases/LeadUseCase";
+import { LeadUseCase } from "../../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
 import { useState, useMemo } from "react";
 import { ILeadRepository } from "../model/repositories/ILeadRepository";
@@ -45,20 +45,7 @@ export const useListLeadsViewModel = (repository: ILeadRepository) => {
   };
 
   const searchLeads = (query: string) => {
-    if (!query.trim()) {
-      resetFilter();
-      return;
-    }
-
-    const q = query.toLowerCase();
-
-    const filtered = originalLeads.filter(lead =>
-      lead.nome.toLowerCase().includes(q) ||
-      lead.cpf.includes(q) ||
-      lead.email.toLowerCase().includes(q) ||
-      lead.telefone.toLowerCase().includes(q)
-    );
-
+    const filtered = leadUseCase.filterLeads(originalLeads, query);
     setLeads(filtered);
   };
 
