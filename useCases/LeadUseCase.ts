@@ -1,5 +1,6 @@
 import { ILeadRepository } from "../src/model/repositories/ILeadRepository";
 import { Lead } from "../src/model/entities/Lead";
+import { leadRepository } from "../src/model/repositories/leadRepository";
 
 export class LeadUseCase {
   constructor(private repository: ILeadRepository) {}
@@ -9,8 +10,8 @@ export class LeadUseCase {
   }
 
   async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
-      this.validateLead(lead);
-      return this.repository.create(lead);
+    this.validateLead(lead);
+    return this.repository.create(lead);
   }
 
   validateLead(data: Omit<Lead, "id">): void {
@@ -37,16 +38,17 @@ export class LeadUseCase {
   }
 
   filterLeads(leads: Lead[], query: string): Lead[] {
-      if (!query.trim()) {
-          return leads;
-      }
-      const q = query.toLowerCase();
-      return leads.filter(lead =>
-          lead.nome.toLowerCase().includes(q) ||
-          lead.cpf.includes(q) ||
-          lead.email.toLowerCase().includes(q) ||
-          lead.telefone.toLowerCase().includes(q)
-      );
+    if (!query.trim()) {
+      return leads;
+    }
+    const q = query.toLowerCase();
+    return leads.filter(
+      (lead) =>
+        lead.nome.toLowerCase().includes(q) ||
+        lead.cpf.includes(q) ||
+        lead.email.toLowerCase().includes(q) ||
+        lead.telefone.toLowerCase().includes(q)
+    );
   }
 
   parseError(err: unknown, fallback = "Ocorreu um erro"): string {
@@ -64,3 +66,5 @@ export class LeadUseCase {
     }
   }
 }
+
+export const leadUseCase = new LeadUseCase(leadRepository);

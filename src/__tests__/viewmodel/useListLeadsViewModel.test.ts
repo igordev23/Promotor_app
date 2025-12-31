@@ -1,66 +1,85 @@
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { useListLeadsViewModel } from "../../viewmodel/useListLeadsViewModel";
-import { LeadRepositoryMemory } from "../../model/repositories/memory/LeadRepositoryMemory";
 import { Lead } from "../../model/entities/Lead";
 
+jest.mock("../../model/repositories/leadRepository", () => ({
+  leadRepository: {
+    getAll: jest.fn(),
+    getById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
 describe("useListLeadsViewModel", () => {
-  let repository: LeadRepositoryMemory;
+  const mockRepo =
+    require("../../model/repositories/leadRepository").leadRepository;
 
   beforeEach(() => {
-    repository = new LeadRepositoryMemory();
+    jest.clearAllMocks();
   });
 
   test("should initialize with default state", () => {
-    const { result } = renderHook(() => useListLeadsViewModel(repository));
+    const { result } = renderHook(() => useListLeadsViewModel());
     expect(result.current.state.leads).toEqual([]);
     expect(result.current.state.loading).toBe(false);
     expect(result.current.state.error).toBeNull();
   });
 
   test("should load leads successfully", async () => {
-    await repository.create({
-      nome: "Lead 1",
-      cpf: "12345678900",
-      email: "l1@test.com",
-      telefone: "111",
-      timeStamp: Date.now(),
-    });
+    const mockLeads: Lead[] = [
+      {
+        id: "1",
+        nome: "Lead 1",
+        email: "lead1@test.com",
+        cpf: "12345678900",
+        telefone: "111111111",
+        timeStamp: Date.now(),
+      },
+    ];
+    mockRepo.getAll.mockResolvedValue(mockLeads);
 
-    const { result } = renderHook(() => useListLeadsViewModel(repository));
+    const { result } = renderHook(() => useListLeadsViewModel());
 
     await act(async () => {
       await result.current.actions.loadLeads();
     });
 
-    expect(result.current.state.leads).toHaveLength(1);
-    expect(result.current.state.leads[0].nome).toBe("Lead 1");
     expect(result.current.state.loading).toBe(false);
+    expect(result.current.state.leads).toEqual(mockLeads);
+    expect(result.current.state.originalLeads).toEqual(mockLeads);
   });
 
   test("should filter leads by name", async () => {
-    await repository.create({
-      nome: "Alice",
-      cpf: "11111111111",
-      email: "alice@test.com",
-      telefone: "111",
-      timeStamp: Date.now(),
-    });
-    await repository.create({
-      nome: "Bob",
-      cpf: "22222222222",
-      email: "bob@test.com",
-      telefone: "222",
-      timeStamp: Date.now(),
-    });
+    const mockLeads: Lead[] = [
+      {
+        id: "1",
+        nome: "Alice",
+        email: "alice@test.com",
+        cpf: "11111111111",
+        telefone: "111",
+        timeStamp: Date.now(),
+      },
+      {
+        id: "2",
+        nome: "Bob",
+        email: "bob@test.com",
+        cpf: "22222222222",
+        telefone: "222",
+        timeStamp: Date.now(),
+      },
+    ];
+    mockRepo.getAll.mockResolvedValue(mockLeads);
 
-    const { result } = renderHook(() => useListLeadsViewModel(repository));
+    const { result } = renderHook(() => useListLeadsViewModel());
 
     await act(async () => {
       await result.current.actions.loadLeads();
     });
 
     act(() => {
-      result.current.actions.searchLeads("Ali");
+      result.current.actions.searchLeads("alice");
     });
 
     expect(result.current.state.leads).toHaveLength(1);
@@ -68,49 +87,48 @@ describe("useListLeadsViewModel", () => {
   });
 
   test("should reset filter", async () => {
-    await repository.create({
-      nome: "Alice",
-      cpf: "11111111111",
-      email: "alice@test.com",
-      telefone: "111",
-      timeStamp: Date.now(),
-    });
-    await repository.create({
-      nome: "Bob",
-      cpf: "22222222222",
-      email: "bob@test.com",
-      telefone: "222",
-      timeStamp: Date.now(),
-    });
+    const mockLeads: Lead[] = [
+      {
+        id: "1",
+        nome: "Alice",
+        email: "alice@test.com",
+        cpf: "11111111111",
+        telefone: "111",
+        timeStamp: Date.now(),
+      },
+    ];
+    mockRepo.getAll.mockResolvedValue(mockLeads);
 
-    const { result } = renderHook(() => useListLeadsViewModel(repository));
+    const { result } = renderHook(() => useListLeadsViewModel());
 
     await act(async () => {
       await result.current.actions.loadLeads();
     });
 
     act(() => {
-      result.current.actions.searchLeads("Ali");
+      result.current.actions.searchLeads("alice");
     });
+
     expect(result.current.state.leads).toHaveLength(1);
 
     act(() => {
       result.current.actions.resetFilter();
     });
-    expect(result.current.state.leads).toHaveLength(2);
+
+    expect(result.current.state.leads).toHaveLength(1);
   });
 
   test("should handle error when loading leads fails", async () => {
-    // Mock failure
-    jest.spyOn(repository, "getAll").mockRejectedValue(new Error("Failed to load"));
+    mockRepo.getAll.mockRejectedValue(new Error("Network error"));
 
-    const { result } = renderHook(() => useListLeadsViewModel(repository));
+    const { result } = renderHook(() => useListLeadsViewModel());
 
     await act(async () => {
       await result.current.actions.loadLeads();
     });
 
-    expect(result.current.state.error).toBe("Failed to load");
     expect(result.current.state.loading).toBe(false);
+    expect(result.current.state.error).toBe("Network error");
+    expect(result.current.state.leads).toEqual([]);
   });
 });

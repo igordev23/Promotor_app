@@ -1,7 +1,6 @@
-import { ILeadRepository } from "../model/repositories/ILeadRepository";
+import { leadUseCase } from "../../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useEffect, useState, useMemo } from "react";
-import { LeadUseCase } from "../../useCases/LeadUseCase";
+import { useEffect, useState } from "react";
 
 export type LeadRegisterState = {
   leads: Lead[];
@@ -15,11 +14,10 @@ export type LeadRegisterActions = {
   clearError: () => void;
 };
 
-export const useLeadRegisterViewModel = (
-  repository: ILeadRepository
-): { state: LeadRegisterState; actions: LeadRegisterActions } => {
-  const leadUseCase = useMemo(() => new LeadUseCase(repository), [repository]);
-
+export const useLeadRegisterViewModel = (): {
+  state: LeadRegisterState;
+  actions: LeadRegisterActions;
+} => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -39,7 +37,7 @@ export const useLeadRegisterViewModel = (
 
   useEffect(() => {
     loadLeads();
-  }, [repository]);
+  }, []);
 
   const registerLead = async (data: Omit<Lead, "id">) => {
     setError(null);

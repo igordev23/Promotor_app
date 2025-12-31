@@ -1,7 +1,6 @@
-import { LeadUseCase } from "../../useCases/LeadUseCase";
+import { leadUseCase } from "../../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useState, useMemo } from "react";
-import { ILeadRepository } from "../model/repositories/ILeadRepository";
+import { useState } from "react";
 
 export type ListLeadsState = {
   leads: Lead[];
@@ -17,9 +16,7 @@ export type ListLeadsActions = {
   resetFilter: () => void;
 };
 
-export const useListLeadsViewModel = (repository: ILeadRepository) => {
-  const leadUseCase = useMemo(() => new LeadUseCase(repository), [repository]);
-  
+export const useListLeadsViewModel = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
