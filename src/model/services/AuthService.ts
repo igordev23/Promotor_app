@@ -46,6 +46,13 @@ export class AuthService {
     const token = await this.getToken();
     return !!token;
   }
+
+  async getUser(): Promise<{ email?: string; id: string } | null> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user ? { email: user.email, id: user.id } : null;
+  }
 }
 
 export const authService = new AuthService();

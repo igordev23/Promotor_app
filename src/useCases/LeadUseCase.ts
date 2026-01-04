@@ -1,6 +1,6 @@
-import { ILeadRepository } from "../src/model/repositories/ILeadRepository";
-import { Lead } from "../src/model/entities/Lead";
-import { leadRepository } from "../src/model/repositories/leadRepository";
+import { ILeadRepository } from "../model/repositories/ILeadRepository";
+import { Lead } from "../model/entities/Lead";
+import { leadRepository } from "../model/repositories/leadRepository";
 
 export class LeadUseCase {
   constructor(private repository: ILeadRepository) {}
@@ -25,13 +25,6 @@ export class LeadUseCase {
     if (cleanCpf.length !== 11) {
       throw new Error("CPF deve ter 11 dígitos");
     }
-    if (!data.email?.trim()) {
-      throw new Error("Email é obrigatório");
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      throw new Error("Email inválido");
-    }
     if (!data.telefone?.trim()) {
       throw new Error("Telefone é obrigatório");
     }
@@ -46,7 +39,6 @@ export class LeadUseCase {
       (lead) =>
         lead.nome.toLowerCase().includes(q) ||
         lead.cpf.includes(q) ||
-        lead.email.toLowerCase().includes(q) ||
         lead.telefone.toLowerCase().includes(q)
     );
   }

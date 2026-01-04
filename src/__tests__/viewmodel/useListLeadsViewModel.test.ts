@@ -32,10 +32,8 @@ describe("useListLeadsViewModel", () => {
       {
         id: "1",
         nome: "Lead 1",
-        email: "lead1@test.com",
         cpf: "12345678900",
         telefone: "111111111",
-        timeStamp: Date.now(),
       },
     ];
     mockRepo.getAll.mockResolvedValue(mockLeads);
@@ -56,18 +54,14 @@ describe("useListLeadsViewModel", () => {
       {
         id: "1",
         nome: "Alice",
-        email: "alice@test.com",
         cpf: "11111111111",
         telefone: "111",
-        timeStamp: Date.now(),
       },
       {
         id: "2",
         nome: "Bob",
-        email: "bob@test.com",
         cpf: "22222222222",
         telefone: "222",
-        timeStamp: Date.now(),
       },
     ];
     mockRepo.getAll.mockResolvedValue(mockLeads);
@@ -91,10 +85,8 @@ describe("useListLeadsViewModel", () => {
       {
         id: "1",
         nome: "Alice",
-        email: "alice@test.com",
         cpf: "11111111111",
         telefone: "111",
-        timeStamp: Date.now(),
       },
     ];
     mockRepo.getAll.mockResolvedValue(mockLeads);

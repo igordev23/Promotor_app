@@ -16,10 +16,8 @@ describe("LeadRepositoryMemory", () => {
   test("should create a lead", async () => {
     const leadData: Omit<Lead, "id"> = {
       nome: "Test Lead",
-      email: "test@example.com",
       cpf: "12345678900",
       telefone: "123456789",
-      timeStamp: Date.now(),
     };
 
     const created = await repository.create(leadData);
@@ -35,10 +33,8 @@ describe("LeadRepositoryMemory", () => {
   test("should update a lead", async () => {
     const leadData: Omit<Lead, "id"> = {
       nome: "Old Name",
-      email: "old@example.com",
       cpf: "12345678900",
       telefone: "111",
-      timeStamp: Date.now(),
     };
     const created = await repository.create(leadData);
 
@@ -46,16 +42,13 @@ describe("LeadRepositoryMemory", () => {
 
     const updated = await repository.getById(created.id);
     expect(updated?.nome).toBe("New Name");
-    expect(updated?.email).toBe("old@example.com");
   });
 
   test("should delete a lead", async () => {
     const lead = await repository.create({
       nome: "To Delete",
-      email: "del@example.com",
       cpf: "12345678900",
       telefone: "000",
-      timeStamp: Date.now(),
     });
 
     await repository.delete(lead.id);

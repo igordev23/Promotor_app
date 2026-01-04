@@ -25,9 +25,7 @@ describe("useLeadRegisterViewModel", () => {
       id: "1",
       nome: "Valid Lead",
       cpf: "12345678900",
-      email: "valid@test.com",
       telefone: "123456789",
-      timeStamp: Date.now(),
     };
     mockRepo.create.mockResolvedValue(newLead);
     mockRepo.getAll.mockResolvedValue([newLead]);
@@ -38,9 +36,7 @@ describe("useLeadRegisterViewModel", () => {
       await result.current.actions.registerLead({
         nome: "Valid Lead",
         cpf: "12345678900",
-        email: "valid@test.com",
         telefone: "123456789",
-        timeStamp: Date.now(),
       });
     });
 
@@ -48,9 +44,7 @@ describe("useLeadRegisterViewModel", () => {
     expect(mockRepo.create).toHaveBeenCalledWith({
       nome: "Valid Lead",
       cpf: "12345678900",
-      email: "valid@test.com",
       telefone: "123456789",
-      timeStamp: expect.any(Number),
     });
   });
 
@@ -61,9 +55,7 @@ describe("useLeadRegisterViewModel", () => {
       await result.current.actions.registerLead({
         nome: "",
         cpf: "12345678900",
-        email: "valid@test.com",
         telefone: "123456789",
-        timeStamp: Date.now(),
       });
     });
 
@@ -71,22 +63,7 @@ describe("useLeadRegisterViewModel", () => {
     expect(mockRepo.create).not.toHaveBeenCalled();
   });
 
-  test("should fail if email is invalid", async () => {
-    const { result } = renderHook(() => useLeadRegisterViewModel());
-
-    await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "Test",
-        cpf: "12345678900",
-        email: "invalid-email",
-        telefone: "123456789",
-        timeStamp: Date.now(),
-      });
-    });
-
-    expect(result.current.state.error).toBe("Email inválido");
-    expect(mockRepo.create).not.toHaveBeenCalled();
-  });
+  // email removido do fluxo
 
   test("should fail if cpf is invalid (length)", async () => {
     const { result } = renderHook(() => useLeadRegisterViewModel());
@@ -95,9 +72,7 @@ describe("useLeadRegisterViewModel", () => {
       await result.current.actions.registerLead({
         nome: "Test",
         cpf: "123",
-        email: "test@test.com",
         telefone: "123456789",
-        timeStamp: Date.now(),
       });
     });
 
@@ -112,9 +87,7 @@ describe("useLeadRegisterViewModel", () => {
       await result.current.actions.registerLead({
         nome: "Test",
         cpf: "",
-        email: "test@test.com",
         telefone: "123456789",
-        timeStamp: Date.now(),
       });
     });
 

@@ -1,6 +1,6 @@
-import { leadUseCase } from "../../useCases/LeadUseCase";
+import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type LeadRegisterState = {
   leads: Lead[];
@@ -22,7 +22,7 @@ export const useLeadRegisterViewModel = (): {
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
 
-  const loadLeads = async () => {
+  const loadLeads = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -33,28 +33,29 @@ export const useLeadRegisterViewModel = (): {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadLeads();
-  }, []);
+  }, [loadLeads]);
 
-  const registerLead = async (data: Omit<Lead, "id">) => {
-    setError(null);
-    setLoading(true);
+  const registerLead = useCallback(
+    async (data: Omit<Lead, "id">) => {
+      setError(null);
+      setLoading(true);
+      try {
+        const newLead = await leadUseCase.createLead(data);
+        setLeads((prev) => [...prev, newLead]);
+      } catch (err: unknown) {
+        setError(leadUseCase.parseError(err, "Erro ao cadastrar lead"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
-    try {
-      const newLead = await leadUseCase.createLead(data);
-      // atualiza estado local para UI refletir imediatamente
-      setLeads((prev) => [...prev, newLead]);
-    } catch (err: unknown) {
-      setError(leadUseCase.parseError(err, "Erro ao cadastrar lead"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     state: {

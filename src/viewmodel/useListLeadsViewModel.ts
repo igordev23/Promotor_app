@@ -1,6 +1,6 @@
-import { leadUseCase } from "../../useCases/LeadUseCase";
+import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export type ListLeadsState = {
   leads: Lead[];
@@ -22,10 +22,9 @@ export const useListLeadsViewModel = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [originalLeads, setOriginalLeads] = useState<Lead[]>([]);
 
-  const loadLeads = async () => {
+  const loadLeads = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const result = await leadUseCase.getLeads();
       setOriginalLeads(result);
@@ -35,20 +34,23 @@ export const useListLeadsViewModel = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
-  const searchLeads = (query: string) => {
-    const filtered = leadUseCase.filterLeads(originalLeads, query);
-    setLeads(filtered);
-  };
+  const searchLeads = useCallback(
+    (query: string) => {
+      const filtered = leadUseCase.filterLeads(originalLeads, query);
+      setLeads(filtered);
+    },
+    [originalLeads]
+  );
 
-  const resetFilter = () => {
+  const resetFilter = useCallback(() => {
     setLeads(originalLeads);
-  };
+  }, [originalLeads]);
 
   return {
     state: {

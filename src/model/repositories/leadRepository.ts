@@ -7,7 +7,7 @@ import { authService } from "../services/AuthService";
 export class LeadRepository implements ILeadRepository {
   private api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000,
+    timeout: 60000,
     headers: {
       "Content-Type": "application/json",
     },
@@ -28,9 +28,13 @@ export class LeadRepository implements ILeadRepository {
     try {
       const response = await this.api.get("/promotor/leads");
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao buscar leads:", error);
-      throw new Error("Falha ao carregar leads");
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Falha ao carregar leads";
+      throw new Error(msg);
     }
   }
 
@@ -53,9 +57,11 @@ export class LeadRepository implements ILeadRepository {
       };
       const response = await this.api.post("/promotor/leads", payload);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar lead:", error);
-      throw new Error("Falha ao criar lead");
+      const msg =
+        error.response?.data?.message || error.message || "Falha ao criar lead";
+      throw new Error(msg);
     }
   }
 
@@ -67,18 +73,26 @@ export class LeadRepository implements ILeadRepository {
         cpf: item.cpf,
       };
       await this.api.put(`/promotor/leads/${id}`, payload);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao atualizar lead:", error);
-      throw new Error("Falha ao atualizar lead");
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Falha ao atualizar lead";
+      throw new Error(msg);
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
       await this.api.delete(`/promotor/leads/${id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao deletar lead:", error);
-      throw new Error("Falha ao deletar lead");
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Falha ao deletar lead";
+      throw new Error(msg);
     }
   }
 }
