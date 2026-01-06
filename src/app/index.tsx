@@ -5,4 +5,4 @@ const Index: React.FC = () => {
   return <LoginView />;
 };
 
-export default Index;
+export default Index; //aaa
