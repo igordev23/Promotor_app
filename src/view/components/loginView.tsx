@@ -1,16 +1,22 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
+import { View, Text } from "react-native";
+import { TextInput, Button } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-
-import { useLoginViewModel } from "@/src/viewmodel/useLoginViewModel";
+import { useState } from "react";
+import { useLoginViewModel } from "../../viewmodel/useLoginViewModel";
+import { StyleSheet } from "react-native";
 
 export default function LoginView() {
-  const vm = useLoginViewModel();
+  const { state, actions } = useLoginViewModel();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    await actions.login(email, password);
+  };
 
   return (
     <View style={styles.container}>
-
       <View style={styles.iconWrapper}>
         <MaterialIcons name="account-circle" size={110} color="#3F51B5" />
       </View>
@@ -20,37 +26,42 @@ export default function LoginView() {
       <TextInput
         label="Digite seu e-mail"
         placeholder="exemplo@gmail.com"
-        value={vm.email}
-        onChangeText={vm.setEmail}
+        value={email}
+        onChangeText={setEmail}
         mode="outlined"
         style={styles.input}
       />
 
       <TextInput
         label="Digite sua senha"
-        placeholder="exemplo: scararobaruamakita123"
-        value={vm.password}
-        onChangeText={vm.setPassword}
+        placeholder="********"
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
         mode="outlined"
         style={styles.input}
       />
 
-      <Text style={styles.link}>Esqueceu sua senha?</Text>
+      {state.error && (
+        <Text style={{ color: "red", marginBottom: 8 }}>
+          {state.error}
+        </Text>
+      )}
 
       <Button
         mode="contained"
-        onPress={vm.login}
-        loading={vm.loading}
+        onPress={handleLogin}
+        loading={state.loading}
+        disabled={state.loading}
         style={styles.button}
         contentStyle={{ paddingVertical: 6 }}
       >
         Entrar
       </Button>
-
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
