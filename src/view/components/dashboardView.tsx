@@ -19,7 +19,7 @@ export default function DashboardView() {
       setJourneys(prev => [...prev, { start: now }]);
       setIsActive(true);
     }
-// vai
+
     // ENCERRAR
     else{
       setJourneys(prev => {
