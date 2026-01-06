@@ -3,7 +3,7 @@
 ## 📋 Identificação dos Integrantes do Grupo
 - **Francisco Igor Silva Santos** - 2024116TADS0030 
 - **Sávyo Francisco Barbosa Nascimento** - 20204116TADS0003  
-- **Nome Completo 3** - Matrícula 3  
+- **Carlos André Sampaio do Nascimento** - 2024116TADS0026  
 - **Nome Completo 4** - Matrícula 4
 - **Nome Completo 5** - Matrícula 5   
 
