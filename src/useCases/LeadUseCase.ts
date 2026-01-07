@@ -24,6 +24,7 @@ export class LeadUseCase {
   }
 
   // feat: implementa editLead no LeadUseCase para passar no teste (GREEN)
+  // refactor: organiza validações no editLead
   async editLead(id: string, data: Partial<Lead>): Promise<void> {
     if (!id) {
       throw new Error("ID do lead é obrigatório");
