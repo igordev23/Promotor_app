@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useLoginViewModel } from "../../viewmodel/useLoginViewModel";
 import { StyleSheet } from "react-native";
+import { router } from "expo-router";
 
 export default function LoginView() {
   const { state, actions } = useLoginViewModel();
@@ -12,8 +13,13 @@ export default function LoginView() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    await actions.login(email, password);
+    const success = await actions.login(email, password);
+  
+    if (success) {
+      router.replace("/DashboardScreen");
+    }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -55,7 +61,9 @@ export default function LoginView() {
         disabled={state.loading}
         style={styles.button}
         contentStyle={{ paddingVertical: 6 }}
-      >
+        
+      
+              >
         Entrar
       </Button>
     </View>
