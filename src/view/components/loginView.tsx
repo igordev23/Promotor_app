@@ -29,6 +29,7 @@ export default function LoginView() {
 
       <Text style={styles.title}>Promotor{"\n"}app</Text>
 
+      <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
       <TextInput
         label="Digite seu e-mail"
         placeholder="exemplo@gmail.com"
@@ -38,6 +39,7 @@ export default function LoginView() {
         style={styles.input}
       />
 
+      <Text style={styles.titleInput}>Senha</Text>
       <TextInput
         label="Digite sua senha"
         placeholder="********"
@@ -47,6 +49,8 @@ export default function LoginView() {
         mode="outlined"
         style={styles.input}
       />
+
+<Text style={styles.titleInput}>Esqueceu a sua senha?</Text>
 
       {state.error && (
         <Text style={{ color: "red", marginBottom: 8 }}>
@@ -76,6 +80,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
+    paddingTop: 32,
     alignItems: "center",
   },
   iconWrapper: {
@@ -83,15 +88,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "600",
+    fontSize: 64,
+    fontWeight: "700",
     color: "#3F51B5",
     textAlign: "center",
     marginBottom: 24,
   },
-  input: {
+  titleInput: {
+    fontSize: 18,
+    fontWeight: "300",
+    color: "#49454F",
     width: "100%",
-    marginTop: 16,
+    textAlign: "left",
+    margin: 8,
+  },
+  input: {
+    borderRadius: "20%",
+    width: "100%",
+    margin: 0,
+
   },
   link: {
     alignSelf: "flex-start",
