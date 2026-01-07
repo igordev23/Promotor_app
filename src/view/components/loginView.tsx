@@ -118,4 +118,5 @@ const styles = StyleSheet.create({
     marginTop: 24,
     borderRadius: 50,
   },
+  
 });
