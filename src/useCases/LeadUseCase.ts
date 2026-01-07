@@ -23,6 +23,17 @@ export class LeadUseCase {
     await this.repository.delete(id);
   }
 
+  // feat: implementa editLead no LeadUseCase para passar no teste (GREEN)
+  async editLead(id: string, data: Partial<Lead>): Promise<void> {
+    if (!id) {
+      throw new Error("ID do lead é obrigatório");
+    }
+    if (!data || Object.keys(data).length === 0) {
+      throw new Error("Dados para atualização são obrigatórios");
+    }
+    await this.repository.update(id, data);
+  }
+
   validateLead(data: Omit<Lead, "id">): void {
     if (!data.nome?.trim()) {
       throw new Error("Nome é obrigatório");
