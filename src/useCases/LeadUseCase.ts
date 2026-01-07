@@ -15,6 +15,7 @@ export class LeadUseCase {
   }
 
   // feat: implementa removeLead no LeadUseCase para passar no teste (GREEN)
+  // refactor: melhora validação no removeLead
   async removeLead(id: string): Promise<void> {
     if (!id) {
       throw new Error("ID do lead é obrigatório");
