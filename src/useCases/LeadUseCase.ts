@@ -3,7 +3,7 @@ import { Lead } from "../model/entities/Lead";
 import { leadRepository } from "../model/repositories/leadRepository";
 
 export class LeadUseCase {
-  constructor(private repository: ILeadRepository) {}
+  constructor(private repository: ILeadRepository) { }
 
   async getLeads(): Promise<Lead[]> {
     return this.repository.getAll();
@@ -12,6 +12,14 @@ export class LeadUseCase {
   async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
     this.validateLead(lead);
     return this.repository.create(lead);
+  }
+
+  // feat: implementa removeLead no LeadUseCase para passar no teste (GREEN)
+  async removeLead(id: string): Promise<void> {
+    if (!id) {
+      throw new Error("ID do lead é obrigatório");
+    }
+    await this.repository.delete(id);
   }
 
   validateLead(data: Omit<Lead, "id">): void {
