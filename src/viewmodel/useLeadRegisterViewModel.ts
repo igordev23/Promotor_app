@@ -55,21 +55,6 @@ export const useLeadRegisterViewModel = (): {
     []
   );
 
-  const removeLead = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      await leadUseCase.deleteLead(id);
-      setLeads(prev => prev.filter(lead => lead.id !== id));
-    } catch (err) {
-      setError("Erro ao remover lead");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-
   const clearError = useCallback(() => setError(null), []);
 
   return {
@@ -82,7 +67,6 @@ export const useLeadRegisterViewModel = (): {
       registerLead,
       loadLeads,
       clearError,
-      removeLead,
     },
   };
 };
