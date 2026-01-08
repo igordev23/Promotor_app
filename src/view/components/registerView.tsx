@@ -1,34 +1,70 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
+import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { useLeadRegisterViewModel } from "@/src/viewmodel/useLeadRegisterViewModel";
 
 export default function RegisterView() {
-
-  const vm = useLeadRegisterViewModel();
+  const { state, actions } = useLeadRegisterViewModel();
   const router = useRouter();
+
+  // 🔹 Estados controlados pela View
+  const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [telefone, setTelefone] = useState("");
+
+  // 🔹 Apenas visual
+  const dateTime = useMemo(
+    () => new Date().toLocaleString("pt-BR"),
+    []
+  );
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    return digits
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  };
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    return digits
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
+  };
+
+  const handleSave = async () => {
+    await actions.registerLead({
+      nome,
+      cpf: cpf.replace(/\D/g, ""),            //remover formatação antes de enviar
+      telefone: telefone.replace(/\D/g, "")   //remover formatação antes de enviar
+    });
+  
+    setNome("");
+    setCpf("");
+    setTelefone("");
+  };
+  
 
   return (
     <View style={styles.container}>
 
       {/* Top Bar */}
       <View style={styles.header}>
-        <MaterialIcons 
-          name="arrow-back" 
-          size={26} 
+        <MaterialIcons
+          name="arrow-back"
+          size={26}
           color="#1B1B1F"
           onPress={() => router.back()}
         />
 
-        <Text 
-        style={styles.headerTitle}
-        onPress={() => router.push("/RegisterScreen")}
-        >
-            Registrar Leads</Text>
-        
+        <Text style={styles.headerTitle}>
+          Registrar Leads
+        </Text>
       </View>
 
       {/* Card */}
@@ -44,16 +80,16 @@ export default function RegisterView() {
 
         <TextInput
           label="Nome completo"
-          value={vm.name}
-          onChangeText={vm.setName}
+          value={nome}
+          onChangeText={setNome}
           mode="outlined"
           style={styles.input}
         />
 
         <TextInput
           label="Digite seu número"
-          value={vm.phone}
-          onChangeText={vm.setPhone}
+          value={telefone}
+          onChangeText={(text) => setTelefone(formatPhone(text))}
           mode="outlined"
           keyboardType="phone-pad"
           style={styles.input}
@@ -61,29 +97,43 @@ export default function RegisterView() {
 
         <TextInput
           label="Digite seu CPF"
-          value={vm.cpf}
-          onChangeText={vm.setCpf}
+          value={cpf}
+          onChangeText={(text) => setCpf(formatCPF(text))}
           mode="outlined"
+          keyboardType="numeric"
           style={styles.input}
-        />
+        /> 
 
         <View style={styles.timeBox}>
           <Text style={styles.timeLabel}>Registro salvo em:</Text>
-          <Text>{vm.dateTime}</Text>
+          <Text>{dateTime}</Text>
         </View>
 
-        <Button
-          mode="contained"
-          onPress={vm.saveLead}
-          style={styles.saveBtn}
-        >
-          Salvar
-        </Button>
+        {state.loading ? (
+          <ActivityIndicator />
+        ) : (
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            style={styles.saveBtn}
+            disabled={!nome || !cpf || !telefone}
+          >
+            Salvar
+          </Button>
+        )}
+
+        {state.error && (
+          <Text style={{ color: "red", marginTop: 8 }}>
+            {state.error}
+          </Text>
+        )}
 
       </View>
     </View>
   );
 }
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

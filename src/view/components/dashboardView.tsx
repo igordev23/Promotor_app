@@ -99,7 +99,7 @@ export default function DashboardView() {
         />
         <Text
           style={styles.actionText}
-          onPress={() => router.push("/RegisterScreen")}
+          onPress={() => router.push("/RegisterLeadScreen")}
         >
           Registrar Leads
         </Text>
