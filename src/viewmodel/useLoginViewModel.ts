@@ -43,7 +43,6 @@ export const useLoginViewModel = () => {
 
   const logout = async (): Promise<void> => {
     setLoading(true);
-    alert("logoutado")
     try {
       await authService.logout();
       setIsAuthenticated(false);
