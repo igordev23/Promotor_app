@@ -120,6 +120,8 @@ export default function RegisterView() {
           >
             Salvar
           </Button>
+
+          
         )}
 
         {state.error && (
@@ -127,12 +129,17 @@ export default function RegisterView() {
             {state.error}
           </Text>
         )}
-
+          <Button
+            mode="contained"
+            onPress={() => router.push("/DashboardScreen")}
+            style={styles.voltarBtn}
+          >
+            Voltar
+          </Button>
       </View>
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -185,6 +192,13 @@ const styles = StyleSheet.create({
   },
 
   saveBtn: {
+    borderRadius: 50,
+    alignSelf: "center",
+    width: 160
+  },
+
+  voltarBtn: {
+    margin: 10,
     borderRadius: 50,
     alignSelf: "center",
     width: 160
