@@ -1,41 +1,54 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-type Lead = {
-  id: string;
-  nome: string;
-  data: string;
-  telefone: string;
-  cpf: string;
-};
-
-const mockLeads: Lead[] = [
-  {
-    id: "1",
-    nome: "João Silva da Costa Lima",
-    data: "02/01/2026 - 10:38",
-    telefone: "(62) 0000-0000",
-    cpf: "000.000.000-00",
-  },
-  {
-    id: "2",
-    nome: "João Silva da Costa Lima",
-    data: "02/01/2026 - 10:38",
-    telefone: "(62) 0000-0000",
-    cpf: "000.000.000-00",
-  },
-];
+import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
 
 export default function ListarLeadsView() {
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const { state, actions } = useListLeadsViewModel();
+
   const [busca, setBusca] = useState("");
 
-  const leadsFiltrados = leads.filter(l =>
-    l.nome.toLowerCase().includes(busca.toLowerCase())
-  );
+  // 🔹 Carrega leads ao entrar na tela
+  useEffect(() => {
+    actions.loadLeads();
+  }, []);
+
+  // 🔹 Pesquisa delegada ao ViewModel
+  const handleSearch = (text: string) => {
+    setBusca(text);
+    if (!text.trim()) {
+      actions.resetFilter();
+    } else {
+      actions.searchLeads(text);
+    }
+  };
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    return digits
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  };
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    return digits
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
+  };
 
   return (
     <View style={styles.container}>
@@ -61,7 +74,7 @@ export default function ListarLeadsView() {
             style={styles.input}
             placeholder="Procure por Leads Registrados"
             value={busca}
-            onChangeText={setBusca}
+            onChangeText={handleSearch}
           />
         </View>
 
@@ -70,26 +83,41 @@ export default function ListarLeadsView() {
         </TouchableOpacity>
       </View>
 
+      {/* LOADING */}
+      {state.loading && (
+        <ActivityIndicator style={{ marginTop: 20 }} />
+      )}
+
+      {/* ERROR */}
+      {state.error && (
+        <Text style={{ color: "red", marginTop: 10 }}>
+          {state.error}
+        </Text>
+      )}
+
       {/* COUNT */}
-      <Text style={styles.countText}>
-        {leadsFiltrados.length} Leads encontrados
-      </Text>
+      {!state.loading && (
+        <Text style={styles.countText}>
+          {state.leads.length} Leads encontrados
+        </Text>
+      )}
 
       {/* LIST */}
       <FlatList
-        data={leadsFiltrados}
-        keyExtractor={item => item.id}
+        data={state.leads}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            
+
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
               <Ionicons name="alert-circle-outline" size={22} color="#d33" />
             </View>
 
-            <Text>📅  {item.data}</Text>
-            <Text>📞  {item.telefone}</Text>
-            <Text>🪪  {item.cpf}</Text>
+            <Text>Criado em 📅:  {item.criadoEm}</Text>
+            <Text>Telefone 📞:     {formatPhone(item.telefone)}</Text>
+            <Text>CPF 🪪:              {formatCPF(item.cpf)}</Text>
 
             <View style={styles.cardActions}>
               <TouchableOpacity>
@@ -107,6 +135,7 @@ export default function ListarLeadsView() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
