@@ -78,11 +78,9 @@ src/
 ### Escopo Não Funcional
 - **Aplicativo híbrido**: Desenvolvido com Expo e React Native.
 - **Interface intuitiva**: Focada na usabilidade.
-- **Armazenamento seguro**: Informações protegidas (Firebase ou SQLite).
+- **Armazenamento seguro**: Informações protegidas (Supabase).
 - **Desempenho otimizado**: Funciona mesmo com conexão limitada.
 - **Conformidade com LGPD**: Garantindo sigilo e uso adequado dos dados.
-- **Offline**: Sincronização posterior (planejado para futuro aprimoramento).
-
 ---
 
 ## 🚀 Passo a Passo para Executar o App
