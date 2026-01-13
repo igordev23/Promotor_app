@@ -1,62 +1,86 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
+import { View, Text } from "react-native";
+import { TextInput, Button } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-
-import { useLoginViewModel } from "@/src/viewmodel/useLoginViewModel";
+import { useState } from "react";
+import { useLoginViewModel } from "../../viewmodel/useLoginViewModel";
+import { StyleSheet } from "react-native";
+import { router } from "expo-router";
 
 export default function LoginView() {
-  const vm = useLoginViewModel();
+  const { state, actions } = useLoginViewModel();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    const success = await actions.login(email, password);
+  
+    if (success) {
+      router.replace("/DashboardScreen");
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
-
       <View style={styles.iconWrapper}>
         <MaterialIcons name="account-circle" size={110} color="#3F51B5" />
       </View>
 
       <Text style={styles.title}>Promotor{"\n"}app</Text>
 
+      <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
       <TextInput
         label="Digite seu e-mail"
         placeholder="exemplo@gmail.com"
-        value={vm.email}
-        onChangeText={vm.setEmail}
+        value={email}
+        onChangeText={setEmail}
         mode="outlined"
         style={styles.input}
       />
 
+      <Text style={styles.titleInput}>Senha</Text>
       <TextInput
         label="Digite sua senha"
-        placeholder="exemplo: scararobaruamakita123"
-        value={vm.password}
-        onChangeText={vm.setPassword}
+        placeholder="********"
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
         mode="outlined"
         style={styles.input}
       />
 
-      <Text style={styles.link}>Esqueceu sua senha?</Text>
+<Text style={styles.titleInput}>Esqueceu a sua senha?</Text>
+
+      {state.error && (
+        <Text style={{ color: "red", marginBottom: 8 }}>
+          {state.error}
+        </Text>
+      )}
 
       <Button
         mode="contained"
-        onPress={vm.login}
-        loading={vm.loading}
+        onPress={handleLogin}
+        loading={state.loading}
+        disabled={state.loading}
         style={styles.button}
         contentStyle={{ paddingVertical: 6 }}
-      >
+        
+      
+              >
         Entrar
       </Button>
-
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
+    paddingTop: 32,
     alignItems: "center",
   },
   iconWrapper: {
@@ -64,15 +88,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "600",
+    fontSize: 64,
+    fontWeight: "700",
     color: "#3F51B5",
     textAlign: "center",
     marginBottom: 24,
   },
-  input: {
+  titleInput: {
+    fontSize: 18,
+    fontWeight: "300",
+    color: "#49454F",
     width: "100%",
-    marginTop: 16,
+    textAlign: "left",
+    margin: 8,
+  },
+  input: {
+    borderRadius: "20%",
+    width: "100%",
+    margin: 0,
+
   },
   link: {
     alignSelf: "flex-start",
@@ -84,4 +118,5 @@ const styles = StyleSheet.create({
     marginTop: 24,
     borderRadius: 50,
   },
+  
 });

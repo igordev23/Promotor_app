@@ -2,7 +2,7 @@
   "compilerOptions": {
     "jsx": "react-native",
     "target": "esnext",
-    "module": "commonjs",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -23,5 +23,6 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
+
   ]
 }
