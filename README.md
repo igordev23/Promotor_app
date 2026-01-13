@@ -73,7 +73,7 @@ src/
 
 ## 🏗️ Funcionalidades Implementadas
 ### Escopo Funcional
-- **Registro digital de leads**: Nome, contato, endereço, observações, etc.
+- **Registro digital de leads**: Nome, contato, cpf.
 
 ### Escopo Não Funcional
 - **Aplicativo híbrido**: Desenvolvido com Expo e React Native.
@@ -127,7 +127,6 @@ src/
 
 ## 🏆 Critérios de Avaliação Atendidos
 - **Arquitetura MVVM**: Implementada com separação clara entre camadas.
-- **Inversão de Dependências**: Aplicada ao serviço de tarefas.
 - **Testes Automatizados**: Incluem testes unitários e de CRUD.
 - **Organização do Código**: Estrutura de pastas coerente e modular.
 - **Funcionalidades**: Controle de jornada, registro de leads e rastreamento implementados com sucesso.
