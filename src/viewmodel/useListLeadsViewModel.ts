@@ -14,6 +14,8 @@ export type ListLeadsActions = {
   clearError: () => void;
   searchLeads: (query: string) => void;
   resetFilter: () => void;
+  // ação integrada via TDD
+  removeLead: (id: string) => Promise<void>;
 };
 
 export const useListLeadsViewModel = () => {
@@ -48,6 +50,25 @@ export const useListLeadsViewModel = () => {
     [originalLeads]
   );
 
+  const removeLead = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await leadUseCase.removeLead(id);
+
+      setLeads((prev) => prev.filter((lead) => lead.id !== id));
+      setOriginalLeads((prev) =>
+        prev.filter((lead) => lead.id !== id)
+      );
+    } catch (err) {
+      setError(leadUseCase.parseError(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
   const resetFilter = useCallback(() => {
     setLeads(originalLeads);
   }, [originalLeads]);
@@ -64,6 +85,7 @@ export const useListLeadsViewModel = () => {
       clearError,
       searchLeads,
       resetFilter,
+      removeLead,
     },
   };
 };
