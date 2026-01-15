@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { authService } from "../model/services/AuthService";
 import { journeyUseCase } from "../useCases/JourneyUseCase";
 import { leadUseCase } from "../useCases/LeadUseCase";
@@ -10,6 +10,8 @@ export type DashboardState = {
   totalLeads: number;
   loading: boolean;
   error: string | null;
+  activeSince?: number | null;
+  elapsedMs: number;
 };
 
 export type DashboardActions = {
@@ -26,6 +28,8 @@ export const useDashboardViewModel = (): {
   const [userName, setUserName] = useState("");
   const [isWorking, setIsWorking] = useState(false);
   const [totalLeads, setTotalLeads] = useState(0);
+  const [activeSince, setActiveSince] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -37,6 +41,13 @@ export const useDashboardViewModel = (): {
 
       const journey = await journeyUseCase.getJourneyStatus(user.id);
       setIsWorking(journey.status === "ativo");
+      if (journey.status === "ativo") {
+        const start = typeof journey.inicio === "string" ? Date.parse(journey.inicio) : (journey.inicio ?? Date.now());
+        setActiveSince(start || Date.now());
+      } else {
+        setActiveSince(null);
+        setElapsedMs(0);
+      }
 
       const leads = await leadUseCase.getLeads();
       setTotalLeads(leads.length);
@@ -57,6 +68,9 @@ export const useDashboardViewModel = (): {
       if (!user) throw new Error("Usuário não autenticado");
       if (isWorking) {
         await journeyUseCase.endJourney(user.id);
+        setIsWorking(false);
+        setActiveSince(null);
+        setElapsedMs(0);
       } else {
         await journeyUseCase.startJourney(user.id);
         try {
@@ -76,6 +90,13 @@ export const useDashboardViewModel = (): {
       }
       const journey = await journeyUseCase.getJourneyStatus(user.id);
       setIsWorking(journey.status === "ativo");
+      if (journey.status === "ativo") {
+        const start = typeof journey.inicio === "string" ? Date.parse(journey.inicio) : (journey.inicio ?? Date.now());
+        setActiveSince(start || Date.now());
+      } else {
+        setActiveSince(null);
+        setElapsedMs(0);
+      }
     } catch (err) {
       const message =
         err instanceof Error
@@ -87,6 +108,20 @@ export const useDashboardViewModel = (): {
     }
   }, [isWorking]);
 
+  useEffect(() => {
+    let timer: any;
+    if (isWorking && activeSince) {
+      const update = () => {
+        setElapsedMs(Date.now() - activeSince);
+      };
+      update();
+      timer = setInterval(update, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isWorking, activeSince]);
+
   return {
     state: {
       userName,
@@ -94,6 +129,8 @@ export const useDashboardViewModel = (): {
       totalLeads,
       loading,
       error,
+      activeSince,
+      elapsedMs,
     },
     actions: {
       loadData,

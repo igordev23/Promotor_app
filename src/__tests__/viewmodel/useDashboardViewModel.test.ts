@@ -119,4 +119,35 @@ describe("useDashboardViewModel", () => {
     expect(journeyUseCase.getJourneyStatus).not.toHaveBeenCalled();
     expect(leadUseCase.getLeads).not.toHaveBeenCalled();
   });
+
+  test("should track elapsed time while journey is active", async () => {
+    jest.useFakeTimers();
+    const startDate = new Date("2020-01-01T00:00:00Z");
+    const nowDate = new Date("2020-01-01T00:00:10Z");
+    jest.setSystemTime(nowDate);
+
+    (journeyUseCase.getJourneyStatus as jest.Mock).mockResolvedValue({
+      status: "ativo",
+      promotor_id: mockUser.id,
+      inicio: startDate.toISOString(),
+    });
+
+    (leadUseCase.getLeads as jest.Mock).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    await act(async () => {
+      await result.current.actions.loadData();
+    });
+
+    expect(result.current.state.isWorking).toBe(true);
+    expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(10000);
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(12000);
+    jest.useRealTimers();
+  });
 });

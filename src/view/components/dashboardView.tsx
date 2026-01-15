@@ -15,6 +15,7 @@ export default function DashboardView() {
     totalLeads,
     loading,
     error,
+    elapsedMs,
   } = state;
 
   const { loadData, toggleWorkStatus } = actions;
@@ -31,6 +32,15 @@ export default function DashboardView() {
   const handleLogout = async () => {
     await logout();
     router.replace("/loginScreen");
+  };
+
+  const formatElapsed = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   };
 
 
@@ -82,7 +92,7 @@ export default function DashboardView() {
         <Card style={styles.card}>
           <Card.Content>
             <Text style={styles.metricValue}>
-              {isWorking ? 1 : 0}    {/* Registrar Leads */}
+              {isWorking ? formatElapsed(elapsedMs) : "00:00:00"}
             </Text>
             <Text style={styles.metricInfo}>Tempo Ativo</Text>
           </Card.Content>
