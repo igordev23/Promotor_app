@@ -28,11 +28,13 @@ export class AuthService {
     }
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<boolean> {
     try {
       await supabase.auth.signOut();
+      return true;
     } catch (error) {
       console.error("Erro no logout:", error);
+      return false;
     } finally {
       await AsyncStorage.removeItem(TOKEN_KEY);
     }

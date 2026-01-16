@@ -5,11 +5,11 @@ import { JourneyRepository } from "../model/repositories/JourneyRepository";
 export class JourneyUseCase {
   constructor(private repository: IJourneyRepository) {}
 
-  async startJourney(idPromotor: string): Promise<void> {
+  async startJourney(idPromotor: string): Promise<number | void> {
     return this.repository.startJourney(idPromotor);
   }
 
-  async endJourney(idPromotor: string): Promise<void> {
+  async endJourney(idPromotor: string): Promise<number | void> {
     return this.repository.endJourney(idPromotor);
   }
 

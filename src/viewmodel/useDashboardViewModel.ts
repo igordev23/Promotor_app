@@ -15,8 +15,8 @@ export type DashboardState = {
 };
 
 export type DashboardActions = {
-  loadData: () => Promise<void>;
-  toggleWorkStatus: () => Promise<void>;
+  loadData: () => Promise<number | void>;
+  toggleWorkStatus: () => Promise<number | void>;
 };
 
 export const useDashboardViewModel = (): {

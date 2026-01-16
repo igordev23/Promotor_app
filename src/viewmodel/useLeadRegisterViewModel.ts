@@ -8,8 +8,8 @@ export type LeadRegisterState = {
 };
 
 export type LeadRegisterActions = {
-  registerLead: (data: Omit<Lead, "id">) => Promise<void>;
-  clearError: () => void;
+  registerLead: (data: Omit<Lead, "id">) => Promise<Lead>;
+  clearError: () => string | null;
 };
 
 export const useLeadRegisterViewModel = () => {
