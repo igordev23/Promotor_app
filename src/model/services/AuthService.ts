@@ -53,6 +53,24 @@ export class AuthService {
     } = await supabase.auth.getUser();
     return user ? { email: user.email, id: user.id } : null;
   }
+
+
+  async recoverPassword(email: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    if (error) {
+      console.error("Erro ao recuperar senha:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro inesperado:", error);
+    return false;
+  }
+}
+
 }
 
 export const authService = new AuthService();
