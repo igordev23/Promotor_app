@@ -1,4 +1,4 @@
-import { RecoverPasswordUseCase } from "../../useCases/recoverPasswordUseCase";
+import { RecoverPasswordUseCase } from "../../useCases/RecoverPasswordUseCase";
 import { authService } from "../../model/services/AuthService";
 
 jest.mock("../../model/services/AuthService", () => ({
