@@ -2,14 +2,29 @@ import { useState } from "react";
 import { RecoverPasswordUseCase } from "../useCases/RecoverPasswordUseCase";
 import { authService } from "../model/services/AuthService";
 
-export function useRecoverPasswordViewModel(
-  recoverPasswordUseCase = new RecoverPasswordUseCase(authService)
-) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+type RecoverPasswordState = {
+  loading: boolean;
+  error: string | null;
+  success: boolean;
+};
 
-  const recoverPassword = async (email: string) => {
+type RecoverPasswordActions = {
+  recoverPassword(email: string): Promise<void>;
+};
+
+type UseRecoverPasswordViewModel = {
+  state: RecoverPasswordState;
+  actions: RecoverPasswordActions;
+};
+
+export function useRecoverPasswordViewModel(
+  recoverPasswordUseCase: RecoverPasswordUseCase = new RecoverPasswordUseCase(authService)
+): UseRecoverPasswordViewModel {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+
+  const recoverPassword = async (email: string): Promise<void> => {
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -17,7 +32,7 @@ export function useRecoverPasswordViewModel(
     try {
       await recoverPasswordUseCase.execute(email);
       setSuccess(true);
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
