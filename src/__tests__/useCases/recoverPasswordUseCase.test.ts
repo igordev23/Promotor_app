@@ -11,7 +11,7 @@ describe("RecoverPasswordUseCase", () => {
   let useCase: RecoverPasswordUseCase;
 
   beforeEach(() => {
-    useCase = new RecoverPasswordUseCase();
+    useCase = new RecoverPasswordUseCase(authService);
     jest.clearAllMocks();
   });
 

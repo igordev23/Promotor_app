@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import supabase from "../../config/supabase";
+import { AuthRepository } from "../repositories/AuthRepository";
 
 const TOKEN_KEY = "auth_token";
 
-export class AuthService {
+export class AuthService implements AuthRepository {
   async login(email: string, password: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -24,6 +25,22 @@ export class AuthService {
       return false;
     } catch (error) {
       console.error("Erro no login:", error);
+      return false;
+    }
+  }
+
+  async recoverPassword(email: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+      if (error) {
+        console.error("Erro ao recuperar senha:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro inesperado:", error);
       return false;
     }
   }
@@ -53,24 +70,6 @@ export class AuthService {
     } = await supabase.auth.getUser();
     return user ? { email: user.email, id: user.id } : null;
   }
-
-
-  async recoverPassword(email: string): Promise<boolean> {
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-
-    if (error) {
-      console.error("Erro ao recuperar senha:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Erro inesperado:", error);
-    return false;
-  }
-}
-
 }
 
 export const authService = new AuthService();
