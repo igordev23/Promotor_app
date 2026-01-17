@@ -1,5 +1,5 @@
 {
-  "expo": {
+  "expo": {   
     "name": "testapp",
     "slug": "testapp",
     "version": "1.0.0",
@@ -12,6 +12,8 @@
       "supportsTablet": true
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
+      "windowSoftInputMode": "adjustResize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -50,4 +52,6 @@
     }
 
   }
+
+  
 }
