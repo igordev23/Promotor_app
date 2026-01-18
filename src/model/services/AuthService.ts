@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import supabase from "../../config/supabase";
 import { AuthRepository } from "../repositories/AuthRepository";
+import { DEEP_LINKS } from "../../config/deepLinks";
 
 const TOKEN_KEY = "auth_token";
 
@@ -30,20 +31,23 @@ export class AuthService implements AuthRepository {
   }
 
   async recoverPassword(email: string): Promise<boolean> {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: DEEP_LINKS.resetPassword,
+    });
 
-      if (error) {
-        console.error("Erro ao recuperar senha:", error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Erro inesperado:", error);
+    if (error) {
+      console.error("Erro ao recuperar senha:", error);
       return false;
     }
+
+    return true;
+  } catch (error) {
+    console.error("Erro inesperado:", error);
+    return false;
   }
+}
+
 
   async resetPassword(password: string): Promise<boolean> {
     try {

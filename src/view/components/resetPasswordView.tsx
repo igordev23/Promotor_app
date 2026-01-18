@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Button, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import { useResetPasswordViewModel } from "../../viewmodel/useResetPasswordViewModel";
+import supabase from "../../config/supabase";
 
 export function ResetPasswordView() {
-  const navigation = useNavigation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -16,10 +16,7 @@ export function ResetPasswordView() {
   useEffect(() => {
     if (success) {
       Alert.alert("Sucesso", "Senha redefinida com sucesso");
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" as never }],
-      });
+      router.replace("/loginScreen");
     }
   }, [success]);
 
@@ -28,6 +25,27 @@ export function ResetPasswordView() {
       Alert.alert("Erro", error);
     }
   }, [error]);
+  useEffect(() => {
+  const checkRecoverySession = async () => {
+    const { data } = await supabase.auth.getSession();
+
+    if (!data.session) {
+      Alert.alert(
+        "Acesso inválido",
+        "Este link expirou ou não é válido."
+      );
+      router.replace("/loginScreen");
+      return;
+    }
+
+    // Opcional, mas recomendado
+    if (data.session.user?.aud !== "authenticated") {
+      router.replace("/loginScreen");
+    }
+  };
+
+  checkRecoverySession();
+}, []);
 
   return (
     <View style={{ padding: 24 }}>
