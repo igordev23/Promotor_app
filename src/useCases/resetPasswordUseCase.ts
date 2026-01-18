@@ -1,5 +1,7 @@
 import { AuthRepository } from "../model/repositories/AuthRepository";
 
+const MIN_PASSWORD_LENGTH = 6;
+
 export class ResetPasswordUseCase {
   constructor(
     private readonly authRepository: AuthRepository
@@ -13,12 +15,14 @@ export class ResetPasswordUseCase {
       throw new Error("Senha e confirmação são obrigatórias");
     }
 
-    if (password !== confirmPassword) {
-      throw new Error("As senhas não coincidem");
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(
+        `A senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres`
+      );
     }
 
-    if (password.length < 6) {
-      throw new Error("A senha deve ter no mínimo 6 caracteres");
+    if (password !== confirmPassword) {
+      throw new Error("As senhas não coincidem");
     }
 
     const success = await this.authRepository.resetPassword(password);
