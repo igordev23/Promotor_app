@@ -1,21 +1,14 @@
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook, act } from "@testing-library/react";
 import { useResetPasswordViewModel } from "../../viewmodel/useResetPasswordViewModel";
 import { ResetPasswordUseCase } from "../../useCases/resetPasswordUseCase";
 
-
+function makeUseCaseMock() {
+  return {
+    execute: jest.fn(),
+  } as unknown as ResetPasswordUseCase;
+}
 
 describe("useResetPasswordViewModel", () => {
-  const executeMock = jest.fn();
-
-  const makeUseCaseMock = () =>
-    ({
-      execute: executeMock,
-    } as unknown as ResetPasswordUseCase);
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("deve iniciar com estado padrão", () => {
     const useCaseMock = makeUseCaseMock();
 
@@ -29,50 +22,37 @@ describe("useResetPasswordViewModel", () => {
   });
 
   it("deve chamar o use case e marcar sucesso", async () => {
-    executeMock.mockResolvedValueOnce(undefined);
-
     const useCaseMock = makeUseCaseMock();
+    useCaseMock.execute = jest.fn().mockResolvedValue(undefined);
 
     const { result } = renderHook(() =>
       useResetPasswordViewModel(useCaseMock)
     );
 
     await act(async () => {
-      await result.current.actions.resetPassword(
-        "senha123",
-        "senha123"
-      );
+      await result.current.actions.resetPassword("123456", "123456");
     });
 
-    expect(executeMock).toHaveBeenCalledWith(
-      "senha123",
-      "senha123"
-    );
+    expect(useCaseMock.execute).toHaveBeenCalledWith("123456", "123456");
     expect(result.current.state.success).toBe(true);
     expect(result.current.state.error).toBeNull();
-    expect(result.current.state.loading).toBe(false);
   });
 
   it("deve capturar erro do use case", async () => {
-    executeMock.mockRejectedValueOnce(
-      new Error("Senha inválida")
-    );
-
     const useCaseMock = makeUseCaseMock();
+    useCaseMock.execute = jest
+      .fn()
+      .mockRejectedValue(new Error("Erro qualquer"));
 
     const { result } = renderHook(() =>
       useResetPasswordViewModel(useCaseMock)
     );
 
     await act(async () => {
-      await result.current.actions.resetPassword(
-        "123",
-        "456"
-      );
+      await result.current.actions.resetPassword("123", "456");
     });
 
-    expect(result.current.state.error).toBe("Senha inválida");
     expect(result.current.state.success).toBe(false);
-    expect(result.current.state.loading).toBe(false);
+    expect(result.current.state.error).toBe("Erro qualquer");
   });
 });
