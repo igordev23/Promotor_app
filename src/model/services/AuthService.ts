@@ -45,6 +45,25 @@ export class AuthService implements AuthRepository {
     }
   }
 
+  async resetPassword(password: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (error) {
+        console.error("Erro ao redefinir senha:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+      return false;
+    }
+  }
+
+  
   async logout(): Promise<void> {
     try {
       await supabase.auth.signOut();
