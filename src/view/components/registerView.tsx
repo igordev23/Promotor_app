@@ -43,12 +43,12 @@ export default function RegisterView() {
       cpf: cpf.replace(/\D/g, ""),            //remover formatação antes de enviar
       telefone: telefone.replace(/\D/g, "")   //remover formatação antes de enviar
     });
-  
+
     setNome("");
     setCpf("");
     setTelefone("");
   };
-  
+
 
   return (
     <View style={styles.container}>
@@ -102,40 +102,42 @@ export default function RegisterView() {
           mode="outlined"
           keyboardType="numeric"
           style={styles.input}
-        /> 
+        />
 
         <View style={styles.timeBox}>
           <Text style={styles.timeLabel}>Registro salvo em:</Text>
           <Text>{dateTime}</Text>
         </View>
 
-        {state.loading ? (
-          <ActivityIndicator />
-        ) : (
-          <Button
-            mode="contained"
-            onPress={handleSave}
-            style={styles.saveBtn}
-            disabled={!nome || !cpf || !telefone}
-          >
-            Salvar
-          </Button>
+        <View style={styles.boxButton}>
 
-          
-        )}
-
-        {state.error && (
-          <Text style={{ color: "red", marginTop: 8 }}>
-            {state.error}
-          </Text>
-        )}
           <Button
             mode="contained"
             onPress={() => router.push("/DashboardScreen")}
-            style={styles.voltarBtn}
+            style={styles.cancelarBtn}
           >
-            Voltar
+            Cancelar
           </Button>
+
+          {state.loading ? (
+            <ActivityIndicator />
+          ) : (
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              style={styles.saveBtn}
+              disabled={!nome || !cpf || !telefone}
+            >
+              Salvar
+            </Button>
+          )}
+
+          {state.error && (
+            <Text style={{ color: "red", marginTop: 8 }}>
+              {state.error}
+            </Text>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -143,16 +145,17 @@ export default function RegisterView() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#F7F9FF",
-    padding: 16
+    padding: 24,
+    marginTop: 20,
   },
 
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 16
+    marginBottom: 90
   },
 
   headerTitle: {
@@ -171,12 +174,12 @@ const styles = StyleSheet.create({
   newLeadBtn: {
     borderRadius: 50,
     alignSelf: "center",
-    marginBottom: 24,
+    marginBottom: 32,
     backgroundColor: "#3F51B5"
   },
 
   input: {
-    marginBottom: 16
+    marginBottom: 32
   },
 
   timeBox: {
@@ -192,15 +195,24 @@ const styles = StyleSheet.create({
   },
 
   saveBtn: {
-    borderRadius: 50,
-    alignSelf: "center",
-    width: 160
-  },
-
-  voltarBtn: {
     margin: 10,
     borderRadius: 50,
-    alignSelf: "center",
-    width: 160
+    width: "50%",
+  },
+
+  boxButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "85%",
+    marginBottom: 32
+  },
+
+
+  cancelarBtn: {
+    margin: 10,
+    borderRadius: 50,
+    width: "50%",
+    backgroundColor: "#F44336", // vermelho
   }
 });

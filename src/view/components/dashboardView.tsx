@@ -124,7 +124,9 @@ export default function DashboardView() {
       {/* Sair */}
       <Button
         mode="contained"
-        style={styles.exitButton}
+        style={styles.mainButton}
+        contentStyle={styles.mainButtonContent}
+        labelStyle={styles.mainButtonLabel}
         onPress={handleLogout}
       >
         Sair
