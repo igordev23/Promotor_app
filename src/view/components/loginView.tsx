@@ -14,12 +14,12 @@ export default function LoginView() {
 
   const handleLogin = async () => {
     const success = await actions.login(email, password);
-  
+
     if (success) {
       router.replace("/DashboardScreen");
     }
   };
-  
+
 
   return (
     <View style={styles.container}>
@@ -50,7 +50,12 @@ export default function LoginView() {
         style={styles.input}
       />
 
-<Text style={styles.titleInput}>Esqueceu a sua senha?</Text>
+      <Text
+        style={[styles.titleInput, styles.forgotPassword]}
+        onPress={() => router.push("/recoverPasswordScreen")}
+      >
+        Esqueceu a sua senha?
+      </Text>
 
       {state.error && (
         <Text style={{ color: "red", marginBottom: 8 }}>
@@ -65,9 +70,9 @@ export default function LoginView() {
         disabled={state.loading}
         style={styles.button}
         contentStyle={{ paddingVertical: 6 }}
-        
-      
-              >
+
+
+      >
         Entrar
       </Button>
     </View>
@@ -83,6 +88,11 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     alignItems: "center",
   },
+  forgotPassword: {
+    color: "#3F51B5",
+    textDecorationLine: "underline",
+  },
+
   iconWrapper: {
     marginTop: 36,
     marginBottom: 12,
@@ -118,5 +128,5 @@ const styles = StyleSheet.create({
     marginTop: 24,
     borderRadius: 50,
   },
-  
+
 });
