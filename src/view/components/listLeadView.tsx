@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+
 import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
 
 export default function ListarLeadsView() {
@@ -33,6 +34,16 @@ export default function ListarLeadsView() {
       actions.searchLeads(text);
     }
   };
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+
+  const toggleSelectLead = (id: string) => {
+    setSelectedLeads((prev) =>
+      prev.includes(id)
+        ? prev.filter((item) => item !== id) // desmarca
+        : [...prev, id] // marca
+    );
+  };
+
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
 
@@ -112,7 +123,17 @@ export default function ListarLeadsView() {
 
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
-              <Ionicons name="alert-circle-outline" size={22} color="#d33" />
+              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
+                <Ionicons
+                  name={
+                    selectedLeads.includes(item.id)
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={22}
+                  color="#d33"
+                />
+              </TouchableOpacity>
             </View>
 
             <Text style={styles.cardInfo}>Criado em 📅:  {item.criadoEm}</Text>
@@ -212,7 +233,7 @@ const styles = StyleSheet.create({
   cardInfo: {
     fontWeight: "400",
     fontSize: 17,
-    marginBottom:7,
+    marginBottom: 7,
   },
 
   cardActions: {
