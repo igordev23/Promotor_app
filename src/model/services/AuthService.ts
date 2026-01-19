@@ -1,100 +1,85 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import supabase from "../../config/supabase";
-import { AuthRepository } from "../repositories/AuthRepository";
-import { DEEP_LINKS } from "../../config/deepLinks";
+import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const TOKEN_KEY = "auth_token";
 
-export class AuthService implements AuthRepository {
+export class AuthService {
+  private api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 60000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  constructor() {
+    this.api.interceptors.request.use(
+      async (config) => {
+        const token = await AsyncStorage.getItem(TOKEN_KEY);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    this.api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          await AsyncStorage.removeItem(TOKEN_KEY);
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  //  LOGIN VIA BACKEND
   async login(email: string, password: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data } = await this.api.post("/auth/login", {
         email,
         password,
       });
 
-      if (error) {
-        console.error("Erro no login:", error);
+      if (!data?.accessToken) {
+        console.error("Token não retornado:", data);
         return false;
       }
 
-      if (data.session?.access_token) {
-        await AsyncStorage.setItem(TOKEN_KEY, data.session.access_token);
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error("Erro no login:", error);
-      return false;
-    }
-  }
-
-  async recoverPassword(email: string): Promise<boolean> {
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: DEEP_LINKS.resetPassword,
-    });
-
-    if (error) {
-      console.error("Erro ao recuperar senha:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Erro inesperado:", error);
-    return false;
-  }
-}
-
-
-  async resetPassword(password: string): Promise<boolean> {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password,
-      });
-
-      if (error) {
-        console.error("Erro ao redefinir senha:", error);
-        return false;
-      }
-
+      await AsyncStorage.setItem(TOKEN_KEY, data.accessToken);
       return true;
-    } catch (error) {
-      console.error("Erro inesperado:", error);
+    } catch (error: any) {
+      console.error(
+        "Erro no login:",
+        error?.response?.data?.error || error.message
+      );
       return false;
     }
   }
+  //  LOGOUT (estateless no backend)
+  async logout(): Promise<void> {
+    await AsyncStorage.removeItem(TOKEN_KEY);
 
-  
-  async logout(): Promise<boolean> {
-    try {
-      await supabase.auth.signOut();
-      return true;
-    } catch (error) {
-      console.error("Erro no logout:", error);
-      return false;
-    } finally {
-      await AsyncStorage.removeItem(TOKEN_KEY);
-    }
   }
 
   async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(TOKEN_KEY);
+    return AsyncStorage.getItem(TOKEN_KEY);
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const token = await this.getToken();
-    return !!token;
+    return !!(await this.getToken());
   }
 
-  async getUser(): Promise<{ email?: string; id: string } | null> {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user ? { email: user.email, id: user.id } : null;
+  async getUser(): Promise<{ id: string; email: string } | null> {
+    try {
+      const { data } = await this.api.get('/auth/me');
+      return data;
+    } catch {
+      return null;
+    }
   }
 }
-
 export const authService = new AuthService();
