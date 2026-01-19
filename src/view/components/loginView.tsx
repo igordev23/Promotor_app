@@ -5,6 +5,10 @@ import { useState } from "react";
 import { useLoginViewModel } from "../../viewmodel/useLoginViewModel";
 import { StyleSheet } from "react-native";
 import { router } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+
+
 
 export default function LoginView() {
   const { state, actions } = useLoginViewModel();
@@ -20,79 +24,85 @@ export default function LoginView() {
     }
   };
 
-
   return (
-    <View style={styles.container}>
-      <View style={styles.iconWrapper}>
-        <MaterialIcons name="account-circle" size={110} color="#3F51B5" />
-      </View>
-
-      <Text style={styles.title}>Promotor{"\n"}app</Text>
-
-      <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
-      <TextInput
-        label="Digite seu e-mail"
-        placeholder="exemplo@gmail.com"
-        value={email}
-        onChangeText={setEmail}
-        mode="outlined"
-        style={styles.input}
-      />
-
-      <Text style={styles.titleInput}>Senha</Text>
-      <TextInput
-        label="Digite sua senha"
-        placeholder="********"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        mode="outlined"
-        style={styles.input}
-      />
-
-      <Text
-        style={[styles.titleInput, styles.forgotPassword]}
-        onPress={() => router.push("/recoverPasswordScreen")}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
       >
-        Esqueceu a sua senha?
-      </Text>
-
-      {state.error && (
-        <Text style={{ color: "red", marginBottom: 8 }}>
-          {state.error}
-        </Text>
-      )}
-
-      <Button
-        mode="contained"
-        onPress={handleLogin}
-        loading={state.loading}
-        disabled={state.loading}
-        style={styles.button}
-        contentStyle={{ paddingVertical: 6 }}
 
 
-      >
-        Entrar
-      </Button>
-    </View>
+
+
+        <View style={styles.iconWrapper}>
+          <MaterialIcons name="account-circle" size={110} color="#3F51B5" />
+        </View>
+
+        <Text style={styles.title}>Promotor{"\n"}app</Text>
+
+        <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
+        <TextInput
+          label="Digite seu e-mail"
+          placeholder="exemplo@gmail.com"
+          value={email}
+          onChangeText={setEmail}
+          mode="outlined"
+          style={styles.input}
+        />
+
+        <Text style={styles.titleInput}>Senha</Text>
+        <TextInput
+          label="Digite sua senha"
+          placeholder="********"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          mode="outlined"
+          style={styles.input}
+        />
+
+        <Button
+          style={styles.forgotPassword}
+          onPress={() => router.push("/RegisterScreen")}
+          contentStyle={{ justifyContent: "flex-start" }}
+
+        >Esqueceu a sua senha?</Button>
+
+        {state.error && (
+          <Text style={{ color: "red", marginBottom: 8 }}>
+            {state.error}
+          </Text>
+        )}
+
+        <Button
+          mode="contained"
+          onPress={handleLogin}
+          loading={state.loading}
+          disabled={state.loading}
+          style={styles.button}
+          contentStyle={{ paddingVertical: 6 }}
+
+        >
+          Entrar
+        </Button>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
     paddingTop: 32,
     alignItems: "center",
   },
-  forgotPassword: {
-    color: "#3F51B5",
-    textDecorationLine: "underline",
-  },
-
   iconWrapper: {
     marginTop: 36,
     marginBottom: 12,
@@ -110,6 +120,14 @@ const styles = StyleSheet.create({
     color: "#49454F",
     width: "100%",
     textAlign: "left",
+    margin: 8,
+  },
+  forgotPassword: {
+    alignSelf: "flex-start",
+    fontSize: 18,
+    fontWeight: "300",
+    color: "#49454F",
+    width: "100%",
     margin: 8,
   },
   input: {
