@@ -9,9 +9,9 @@ export type LoginState = {
 
 export type LoginActions = {
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-  clearError: () => void;
-  checkAuthStatus: () => Promise<void>;
+  logout: () => Promise<boolean>;
+  clearError: () => string | null;
+  checkAuthStatus: () => Promise<boolean>;
 };
 
 export const useLoginViewModel = () => {

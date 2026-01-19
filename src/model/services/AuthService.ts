@@ -33,7 +33,7 @@ export class AuthService implements AuthRepository {
   async recoverPassword(email: string): Promise<boolean> {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:5173/resetPasswordScreen",
+      redirectTo: "https://http://localhost:5173/resetPasswordScreen",
     });
 
     if (error) {
