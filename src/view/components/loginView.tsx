@@ -64,12 +64,13 @@ export default function LoginView() {
           style={styles.input}
         />
 
-        <Button
-          style={styles.forgotPassword}
-          onPress={() => router.push("/RegisterScreen")}
-          contentStyle={{ justifyContent: "flex-start" }}
+             <Text
+        style={[styles.titleInput, styles.forgotPassword]}
+        onPress={() => router.push("/recoverPasswordScreen")}
+      >
+        Esqueceu a sua senha?
+      </Text>
 
-        >Esqueceu a sua senha?</Button>
 
         {state.error && (
           <Text style={{ color: "red", marginBottom: 8 }}>

@@ -68,7 +68,6 @@ export class AuthService implements AuthRepository {
   }
 
   
-  async logout(): Promise<void> {
   async logout(): Promise<boolean> {
     try {
       await supabase.auth.signOut();
