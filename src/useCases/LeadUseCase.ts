@@ -16,16 +16,16 @@ export class LeadUseCase {
 
   // feat: implementa removeLead no LeadUseCase para passar no teste (GREEN)
   // refactor: melhora validação no removeLead
-  async removeLead(id: string): Promise<void> {
+  async removeLead(id: string): Promise<number | void> {
     if (!id) {
       throw new Error("ID do lead é obrigatório");
     }
-    await this.repository.delete(id);
+    return this.repository.delete(id);
   }
 
   // feat: implementa editLead no LeadUseCase para passar no teste (GREEN)
   // refactor: organiza validações no editLead
-  async editLead(id: string, data: Partial<Lead>): Promise<void> {
+  async editLead(id: string, data: Partial<Lead>): Promise<number | void> {
     if (!id) {
       throw new Error("ID do lead é obrigatório");
     }
@@ -35,7 +35,7 @@ export class LeadUseCase {
     await this.repository.update(id, data);
   }
 
-  validateLead(data: Omit<Lead, "id">): void {
+  validateLead(data: Omit<Lead, "id">): number | void {
     if (!data.nome?.trim()) {
       throw new Error("Nome é obrigatório");
     }

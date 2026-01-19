@@ -10,10 +10,10 @@ export type ListLeadsState = {
 };
 
 export type ListLeadsActions = {
-  loadLeads: () => Promise<void>;
-  clearError: () => void;
-  searchLeads: (query: string) => void;
-  resetFilter: () => void;
+  loadLeads: () => Promise<boolean>;
+  clearError: () => string | null;
+  searchLeads: (query: string) => Lead[];
+  resetFilter: () => Lead[];
   // ação integrada via TDD
   removeLead: (id: string) => Promise<void>;
 };
