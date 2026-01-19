@@ -1,51 +1,27 @@
 import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export type LeadRegisterState = {
-  leads: Lead[];
-  error: string | null;
   loading: boolean;
+  error: string | null;
 };
 
 export type LeadRegisterActions = {
-  registerLead: (data: Omit<Lead, "id">) => Promise<void>;
-  loadLeads: () => Promise<void>;
-  clearError: () => void;
+  registerLead: (data: Omit<Lead, "id">) => Promise<Lead>;
+  clearError: () => string | null;
 };
 
-export const useLeadRegisterViewModel = (): {
-  state: LeadRegisterState;
-  actions: LeadRegisterActions;
-} => {
-  const [loading, setLoading] = useState<boolean>(false);
+export const useLeadRegisterViewModel = () => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [leads, setLeads] = useState<Lead[]>([]);
-
-  const loadLeads = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const all = await leadUseCase.getLeads();
-      setLeads(all);
-    } catch (err: unknown) {
-      setError(leadUseCase.parseError(err, "Erro ao carregar leads"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLeads();
-  }, [loadLeads]);
 
   const registerLead = useCallback(
     async (data: Omit<Lead, "id">) => {
-      setError(null);
       setLoading(true);
+      setError(null);
       try {
-        const newLead = await leadUseCase.createLead(data);
-        setLeads((prev) => [...prev, newLead]);
+        await leadUseCase.createLead(data);
       } catch (err: unknown) {
         setError(leadUseCase.parseError(err, "Erro ao cadastrar lead"));
       } finally {
@@ -55,17 +31,17 @@ export const useLeadRegisterViewModel = (): {
     []
   );
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   return {
     state: {
-      leads,
       loading,
       error,
     },
     actions: {
       registerLead,
-      loadLeads,
       clearError,
     },
   };

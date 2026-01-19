@@ -14,15 +14,20 @@ describe("useDashboardViewModel", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
     (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
+
+    // Garantir que esses métodos existem e são rastreáveis
+    (journeyUseCase.startJourney as jest.Mock).mockResolvedValue(undefined);
+    (journeyUseCase.endJourney as jest.Mock).mockResolvedValue(undefined);
   });
 
   test("should load initial data correctly", async () => {
-    // Setup mocks
     (journeyUseCase.getJourneyStatus as jest.Mock).mockResolvedValue({
       status: "inativo",
       promotor_id: mockUser.id,
     });
+
     (leadUseCase.getLeads as jest.Mock).mockResolvedValue([
       { id: "1" },
       { id: "2" },
@@ -34,6 +39,10 @@ describe("useDashboardViewModel", () => {
       await result.current.actions.loadData();
     });
 
+    expect(authService.getUser).toHaveBeenCalledTimes(1);
+    expect(journeyUseCase.getJourneyStatus).toHaveBeenCalledWith(mockUser.id);
+    expect(leadUseCase.getLeads).toHaveBeenCalled();
+
     expect(result.current.state.userName).toBe(mockUser.email);
     expect(result.current.state.isWorking).toBe(false);
     expect(result.current.state.totalLeads).toBe(2);
@@ -42,14 +51,20 @@ describe("useDashboardViewModel", () => {
   });
 
   test("should handle start journey", async () => {
-    // Initial state: inactive
     (journeyUseCase.getJourneyStatus as jest.Mock)
-      .mockResolvedValueOnce({ status: "inativo", promotor_id: mockUser.id }) // Initial check
-      .mockResolvedValueOnce({ status: "ativo", promotor_id: mockUser.id }); // After toggle
+      .mockResolvedValueOnce({
+        status: "inativo",
+        promotor_id: mockUser.id,
+      })
+      .mockResolvedValue({
+        status: "ativo",
+        promotor_id: mockUser.id,
+      });
+
+    (leadUseCase.getLeads as jest.Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() => useDashboardViewModel());
 
-    // Load data first to set initial state (optional depending on implementation, but good practice)
     await act(async () => {
       await result.current.actions.loadData();
     });
@@ -63,10 +78,17 @@ describe("useDashboardViewModel", () => {
   });
 
   test("should handle end journey", async () => {
-    // Initial state: active
     (journeyUseCase.getJourneyStatus as jest.Mock)
-      .mockResolvedValueOnce({ status: "ativo", promotor_id: mockUser.id })
-      .mockResolvedValueOnce({ status: "inativo", promotor_id: mockUser.id });
+      .mockResolvedValueOnce({
+        status: "ativo",
+        promotor_id: mockUser.id,
+      })
+      .mockResolvedValue({
+        status: "inativo",
+        promotor_id: mockUser.id,
+      });
+
+    (leadUseCase.getLeads as jest.Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() => useDashboardViewModel());
 
@@ -83,7 +105,7 @@ describe("useDashboardViewModel", () => {
   });
 
   test("should handle errors during loadData", async () => {
-    (authService.getUser as jest.Mock).mockResolvedValue(null); // Simulate no user
+    (authService.getUser as jest.Mock).mockResolvedValue(null);
 
     const { result } = renderHook(() => useDashboardViewModel());
 
@@ -93,5 +115,39 @@ describe("useDashboardViewModel", () => {
 
     expect(result.current.state.error).toBe("Usuário não autenticado");
     expect(result.current.state.loading).toBe(false);
+
+    expect(journeyUseCase.getJourneyStatus).not.toHaveBeenCalled();
+    expect(leadUseCase.getLeads).not.toHaveBeenCalled();
+  });
+
+  test("should track elapsed time while journey is active", async () => {
+    jest.useFakeTimers();
+    const startDate = new Date("2020-01-01T00:00:00Z");
+    const nowDate = new Date("2020-01-01T00:00:10Z");
+    jest.setSystemTime(nowDate);
+
+    (journeyUseCase.getJourneyStatus as jest.Mock).mockResolvedValue({
+      status: "ativo",
+      promotor_id: mockUser.id,
+      inicio: startDate.toISOString(),
+    });
+
+    (leadUseCase.getLeads as jest.Mock).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    await act(async () => {
+      await result.current.actions.loadData();
+    });
+
+    expect(result.current.state.isWorking).toBe(true);
+    expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(10000);
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(12000);
+    jest.useRealTimers();
   });
 });

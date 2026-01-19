@@ -1,9 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import supabase from "../../config/supabase";
+import { AuthRepository } from "../repositories/AuthRepository";
+import { DEEP_LINKS } from "../../config/deepLinks";
 
 const TOKEN_KEY = "auth_token";
 
-export class AuthService {
+export class AuthService implements AuthRepository {
   async login(email: string, password: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -28,11 +30,52 @@ export class AuthService {
     }
   }
 
+  async recoverPassword(email: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: DEEP_LINKS.resetPassword,
+    });
+
+    if (error) {
+      console.error("Erro ao recuperar senha:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro inesperado:", error);
+    return false;
+  }
+}
+
+
+  async resetPassword(password: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (error) {
+        console.error("Erro ao redefinir senha:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+      return false;
+    }
+  }
+
+  
   async logout(): Promise<void> {
+  async logout(): Promise<boolean> {
     try {
       await supabase.auth.signOut();
+      return true;
     } catch (error) {
       console.error("Erro no logout:", error);
+      return false;
     } finally {
       await AsyncStorage.removeItem(TOKEN_KEY);
     }
