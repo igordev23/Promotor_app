@@ -1,22 +1,25 @@
 import { View, Text } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, useTheme } from "react-native-paper";
 import { useState } from "react";
 import { StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { useRecoverPasswordViewModel } from "../../viewmodel/useRecoverPasswordViewModel";
 
 export default function RecoverPasswordView() {
   const { state, actions } = useRecoverPasswordViewModel();
   const [email, setEmail] = useState("");
+  const router = useRouter();
+  const theme = useTheme();
 
   const handleRecover = async () => {
-    console.log("Recuperando senha para o e-mail:", email);
-    console.log("Estado atual antes da recuperação:", state);
     await actions.recoverPassword(email);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Recuperar senha</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+      <Text style={[styles.title, { color: theme.colors.primary }]}>
+        Recuperar senha
+      </Text>
 
       <TextInput
         label="E-mail"
@@ -24,19 +27,20 @@ export default function RecoverPasswordView() {
         value={email}
         onChangeText={setEmail}
         mode="outlined"
-        style={styles.input}
         autoCapitalize="none"
         keyboardType="email-address"
+        style={styles.input}
+        outlineStyle={styles.outline}
       />
 
       {state.error && (
-        <Text style={styles.errorText}>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
           {state.error}
         </Text>
       )}
 
       {state.success && (
-        <Text style={styles.successText}>
+        <Text style={[styles.successText, { color: theme.colors.primary }]}>
           E-mail de recuperação enviado
         </Text>
       )}
@@ -46,47 +50,69 @@ export default function RecoverPasswordView() {
         onPress={handleRecover}
         loading={state.loading}
         disabled={state.loading}
-        style={styles.button}
+        style={styles.primaryButton}
+        contentStyle={styles.buttonContent}
       >
         Enviar
       </Button>
+
+      <Button
+        mode="outlined"
+        onPress={() => router.back()}
+        style={styles.secondaryButton}
+        contentStyle={styles.buttonContent}
+      >
+        Cancelar
+      </Button>
     </View>
-
-
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F9FF",
     padding: 24,
-    paddingTop: 32,
     justifyContent: "center",
   },
+
   title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#3F51B5",
+    fontSize: 28,
+    fontWeight: "600",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 28,
   },
+
   input: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  button: {
-    marginTop: 16,
-    borderRadius: 50,
+
+  outline: {
+    borderRadius: 12,
   },
+
+  /* ✅ BOTÕES – somente tamanho físico */
+  primaryButton: {
+    marginTop: 8,
+    borderRadius: 20,
+  },
+
+  secondaryButton: {
+    marginTop: 12,
+    borderRadius: 20,
+  },
+
+  buttonContent: {
+    height: 44,           
+    paddingHorizontal: 20 
+  },
+
   errorText: {
-    color: "red",
-    marginBottom: 8,
     textAlign: "center",
+    marginBottom: 12,
   },
+
   successText: {
-    color: "green",
-    marginBottom: 8,
     textAlign: "center",
+    marginBottom: 12,
   },
 });

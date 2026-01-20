@@ -6,6 +6,8 @@ import * as Linking from "expo-linking";
 import supabase from "../config/supabase";
 import { JourneyProvider } from "../contexts/JourneyContext";
 import { AuthProvider } from "../contexts/AuthContext";
+import { Slot } from "expo-router";
+
 
 const theme = {
   ...MD3LightTheme,
