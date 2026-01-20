@@ -11,42 +11,111 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-
-import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
+import { Lead } from "@/src/model/entities/Lead";
+import { leadUseCase } from "@/src/useCases/LeadUseCase";
 
 export default function ListarLeadsView() {
   const router = useRouter();
-  const { state, actions } = useListLeadsViewModel();
 
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [allLeads, setAllLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
-
-  // 🔹 Carrega leads ao entrar na tela
-  useEffect(() => {
-    actions.loadLeads();
-  }, []);
-
-  // 🔹 Pesquisa delegada ao ViewModel
-  const handleSearch = (text: string) => {
-    setBusca(text);
-    if (!text.trim()) {
-      actions.resetFilter();
-    } else {
-      actions.searchLeads(text);
-    }
-  };
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
-  const toggleSelectLead = (id: string) => {
+  // 🔹 Carregar leads
+  async function loadLeads() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await leadUseCase.getLeads();
+      setLeads(data);
+      setAllLeads(data);
+    } catch (err) {
+      setError(leadUseCase.parseError(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  // 🔹 Buscar
+  function handleSearch(text: string) {
+    setBusca(text);
+
+    if (!text.trim()) {
+      setLeads(allLeads);
+    } else {
+      const filtered = leadUseCase.filterLeads(allLeads, text);
+      setLeads(filtered);
+    }
+  }
+
+  // 🔹 Selecionar
+  function toggleSelectLead(id: string) {
     setSelectedLeads((prev) =>
       prev.includes(id)
-        ? prev.filter((item) => item !== id) // desmarca
-        : [...prev, id] // marca
+        ? prev.filter((item) => item !== id)
+        : [...prev, id]
     );
-  };
+  }
+  async function handleRemoveSelected() {
+    try {
+      // percorre o array e remove um por um
+      for (const id of selectedLeads) {
+        await leadUseCase.removeLead(id);
+      }
 
+      // atualiza lista local após exclusões
+      const updated = allLeads.filter(
+        (lead) => !selectedLeads.includes(lead.id)
+      );
+
+      setAllLeads(updated);
+      setLeads(updated);
+
+      // limpa seleção
+      setSelectedLeads([]);
+    } catch (err) {
+      setError(leadUseCase.parseError(err));
+    }
+  }
+  function handleSelectAll() {
+    // se todas já estão selecionadas → limpa seleção
+    if (selectedLeads.length === leads.length) {
+      setSelectedLeads([]);
+      return;
+    }
+  
+    // caso contrário → seleciona todas
+    const allIds = leads.map((lead) => lead.id);
+    setSelectedLeads(allIds);
+  }
+  
+
+
+
+  // 🔹 Remover
+  async function handleRemove(id: string) {
+    try {
+      await leadUseCase.removeLead(id);
+
+      const updated = allLeads.filter((l) => l.id !== id);
+      setAllLeads(updated);
+      setLeads(updated);
+    } catch (err) {
+      setError(leadUseCase.parseError(err));
+    }
+  }
+
+  // 🔹 Formatadores
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
-
     return digits
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
@@ -55,7 +124,6 @@ export default function ListarLeadsView() {
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
-
     return digits
       .replace(/^(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
@@ -63,19 +131,35 @@ export default function ListarLeadsView() {
 
   return (
     <View style={styles.container}>
-
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} />
-        </TouchableOpacity>
+  <TouchableOpacity onPress={() => router.back()}>
+    <Ionicons name="arrow-back" size={24} />
+  </TouchableOpacity>
 
-        <Text style={styles.title}>Listar Leads</Text>
+  <Text style={styles.title}>Listar Leads</Text>
 
-        <TouchableOpacity>
-          <Ionicons name="add-circle-outline" size={26} color="#d33" />
-        </TouchableOpacity>
-      </View>
+  {/* ✅ Checkbox Selecionar Todos */}
+  <TouchableOpacity onPress={handleSelectAll}>
+    <Ionicons
+      name={
+        selectedLeads.length === leads.length && leads.length > 0
+          ? "checkbox"
+          : "square-outline"
+      }
+      size={22}
+      color="#d33"
+    />
+  </TouchableOpacity>
+
+  {/* 🔴 Botão excluir em lote */}
+  {selectedLeads.length > 0 && (
+    <TouchableOpacity onPress={handleRemoveSelected}>
+      <Ionicons name="trash" size={24} color="#d33" />
+    </TouchableOpacity>
+  )}
+</View>
+
 
       {/* SEARCH */}
       <View style={styles.searchRow}>
@@ -88,41 +172,29 @@ export default function ListarLeadsView() {
             onChangeText={handleSearch}
           />
         </View>
-
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter" size={22} />
-        </TouchableOpacity>
       </View>
 
       {/* LOADING */}
-      {state.loading && (
-        <ActivityIndicator style={{ marginTop: 20 }} />
-      )}
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
 
       {/* ERROR */}
-      {state.error && (
-        <Text style={{ color: "red", marginTop: 10 }}>
-          {state.error}
-        </Text>
-      )}
+      {error && <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>}
 
       {/* COUNT */}
-      {!state.loading && (
-        <Text style={styles.countText}>
-          {state.leads.length} Leads encontrados
-        </Text>
+      {!loading && (
+        <Text style={styles.countText}>{leads.length} Leads encontrados</Text>
       )}
 
       {/* LIST */}
       <FlatList
-        data={state.leads}
+        data={leads}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
+
               <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
                 <Ionicons
                   name={
@@ -134,28 +206,35 @@ export default function ListarLeadsView() {
                   color="#d33"
                 />
               </TouchableOpacity>
-            </View>
 
-            <Text style={styles.cardInfo}>Criado em 📅:  {item.criadoEm}</Text>
-            <Text style={styles.cardInfo}>Telefone 📞:     {formatPhone(item.telefone)}</Text>
-            <Text style={styles.cardInfo}>CPF 🪪:              {formatCPF(item.cpf)}</Text>
+
+            </View>
+            <Text style={styles.cardInfo}>
+              Criado em 📅: {item.criadoEm}
+            </Text>
+            <Text style={styles.cardInfo}>
+              Telefone 📞: {formatPhone(item.telefone)}
+            </Text>
+            <Text style={styles.cardInfo}>
+              CPF 🪪: {formatCPF(item.cpf)}
+            </Text>
 
             <View style={styles.cardActions}>
               <TouchableOpacity>
                 <Ionicons name="pencil" size={20} />
               </TouchableOpacity>
 
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => handleRemove(item.id)}>
                 <Ionicons name="trash" size={22} color="#d33" />
               </TouchableOpacity>
             </View>
           </View>
         )}
       />
-
     </View>
   );
 }
+
 
 
 const styles = StyleSheet.create({
@@ -164,6 +243,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FF",
     padding: 24,
     marginTop: 20,
+    marginBottom: 110
   },
 
   header: {
