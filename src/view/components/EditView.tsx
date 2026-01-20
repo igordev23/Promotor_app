@@ -1,9 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
+import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useLeadEditViewModel } from "@/src/viewmodel/useLeadEditViewModel";
+
+type FieldErrors = {
+  nome?: string;
+  cpf?: string;
+  telefone?: string;
+};
 
 export default function EditView() {
   const { state, actions } = useLeadEditViewModel();
@@ -13,11 +19,13 @@ export default function EditView() {
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  // 🔹 Apenas visual
-  const dateTime = useMemo(() => new Date().toLocaleString("pt-BR"), []);
+  const dateTime = useMemo(
+    () => new Date().toLocaleString("pt-BR"),
+    []
+  );
 
-  // 🔹 Formatação
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     return digits
@@ -33,25 +41,39 @@ export default function EditView() {
       .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
   };
 
-  // 🔹 Inicializar dados vindos da lista (edição)
+  // 🔹 Inicializa dados
   useEffect(() => {
     if (params.nome) setNome(String(params.nome));
     if (params.cpf) setCpf(formatCPF(String(params.cpf)));
     if (params.telefone) setTelefone(formatPhone(String(params.telefone)));
   }, []);
 
-  // 🔹 Salvar edição
   const handleSave = async () => {
-    await actions.registerLead({
+  setFieldErrors({});
+
+  try {
+    await actions.editLead({
       id: String(params.id),
       nome,
       cpf: cpf.replace(/\D/g, ""),
       telefone: telefone.replace(/\D/g, ""),
     });
 
-    // Redirecionar para a tela correta
+    // ✅ só navega se NÃO deu erro
     router.replace("/ListLeadsScreen");
-  };
+
+  } catch (err: any) {
+    const msg = err.message.toLowerCase();
+    const errors: FieldErrors = {};
+
+    if (msg.includes("nome")) errors.nome = err.message;
+    if (msg.includes("cpf")) errors.cpf = err.message;
+    if (msg.includes("telefone")) errors.telefone = err.message;
+
+    setFieldErrors(errors);
+  }
+};
+
 
   return (
     <View style={styles.container}>
@@ -60,7 +82,6 @@ export default function EditView() {
         <MaterialIcons
           name="arrow-back"
           size={26}
-          color="#1B1B1F"
           onPress={() => router.replace("/ListLeadsScreen")}
         />
         <Text style={styles.headerTitle}>Editar Lead</Text>
@@ -68,45 +89,72 @@ export default function EditView() {
 
       {/* FORM */}
       <View style={styles.card}>
+        {/* NOME */}
         <TextInput
           label="Nome completo"
           value={nome}
-          onChangeText={setNome}
+          onChangeText={(text) => {
+            setNome(text);
+            setFieldErrors((prev) => ({ ...prev, nome: undefined }));
+          }}
           mode="outlined"
+          error={!!fieldErrors.nome}
           style={styles.input}
         />
+        {fieldErrors.nome && (
+          <Text style={styles.errorText}>{fieldErrors.nome}</Text>
+        )}
 
+        {/* TELEFONE */}
         <TextInput
           label="Telefone"
           value={telefone}
-          onChangeText={(text) => setTelefone(formatPhone(text))}
+          onChangeText={(text) => {
+            setTelefone(formatPhone(text));
+            setFieldErrors((prev) => ({ ...prev, telefone: undefined }));
+          }}
           mode="outlined"
           keyboardType="phone-pad"
+          error={!!fieldErrors.telefone}
           style={styles.input}
         />
+        {fieldErrors.telefone && (
+          <Text style={styles.errorText}>{fieldErrors.telefone}</Text>
+        )}
 
+        {/* CPF */}
         <TextInput
           label="CPF"
           value={cpf}
-          onChangeText={(text) => setCpf(formatCPF(text))}
+          onChangeText={(text) => {
+            setCpf(formatCPF(text));
+            setFieldErrors((prev) => ({ ...prev, cpf: undefined }));
+          }}
           mode="outlined"
           keyboardType="numeric"
+          error={!!fieldErrors.cpf}
           style={styles.input}
         />
+        {fieldErrors.cpf && (
+          <Text style={styles.errorText}>{fieldErrors.cpf}</Text>
+        )}
 
-        <Button
-          mode="contained"
-          onPress={handleSave}
-          loading={state.loading}
-          disabled={!nome || !cpf || !telefone}
-          style={styles.saveBtn}
-        >
-          Salvar
-        </Button>
+        {state.loading ? (
+          <ActivityIndicator />
+        ) : (
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            style={styles.saveBtn}
+          >
+            Salvar
+          </Button>
+        )}
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -143,4 +191,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 50,
   },
+  errorText: {
+  color: "#D32F2F",
+  marginTop: -18,
+  marginBottom: 16,
+  fontSize: 13,
+},
+
 });

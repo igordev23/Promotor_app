@@ -6,23 +6,31 @@ import { useRouter } from "expo-router";
 
 import { useLeadRegisterViewModel } from "@/src/viewmodel/useLeadRegisterViewModel";
 
+type FieldErrors = {
+  nome?: string;
+  cpf?: string;
+  telefone?: string;
+};
+
 export default function RegisterView() {
   const { state, actions } = useLeadRegisterViewModel();
   const router = useRouter();
 
-  // 🔹 Estados controlados pela View
+  // 🔹 Campos
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
 
-  // 🔹 Apenas visual
+  // 🔹 Erros por campo
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
   const dateTime = useMemo(
     () => new Date().toLocaleString("pt-BR"),
     []
   );
+
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
-
     return digits
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
@@ -31,78 +39,111 @@ export default function RegisterView() {
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
-
     return digits
       .replace(/^(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
   };
 
   const handleSave = async () => {
+  setFieldErrors({});
+
+  try {
     await actions.registerLead({
       nome,
-      cpf: cpf.replace(/\D/g, ""),            //remover formatação antes de enviar
-      telefone: telefone.replace(/\D/g, "")   //remover formatação antes de enviar
+      cpf: cpf.replace(/\D/g, ""),
+      telefone: telefone.replace(/\D/g, ""),
     });
 
+    // ✅ Sucesso
     setNome("");
     setCpf("");
     setTelefone("");
-  };
+
+  } catch (err: any) {
+    const error = err.message.toLowerCase();
+    const errors: FieldErrors = {};
+
+    if (error.includes("nome")) errors.nome = err.message;
+    if (error.includes("cpf")) errors.cpf = err.message;
+    if (error.includes("telefone")) errors.telefone = err.message;
+
+    setFieldErrors(errors);
+  }
+};
 
 
   return (
     <View style={styles.container}>
-
-      {/* Top Bar */}
+      {/* Header */}
       <View style={styles.header}>
         <MaterialIcons
           name="arrow-back"
           size={26}
-          color="#1B1B1F"
           onPress={() => router.back()}
         />
-
-        <Text style={styles.headerTitle}>
-          Registrar Leads
-        </Text>
+        <Text style={styles.headerTitle}>Registrar Leads</Text>
       </View>
 
-      {/* Card */}
       <View style={styles.card}>
-
         <Button
-          icon="account-plus"
-          mode="contained"
-          style={styles.newLeadBtn}
-        >
-          Novo Lead
-        </Button>
+  icon="account-plus"
+  mode="contained"
+  style={styles.newLeadBtn}
+  onPress={() => {}}
+>
+  Novo Lead
+</Button>
 
+
+        {/* NOME */}
         <TextInput
           label="Nome completo"
           value={nome}
-          onChangeText={setNome}
+          onChangeText={(text) => {
+            setNome(text);
+            setFieldErrors((prev) => ({ ...prev, nome: undefined }));
+          }}
           mode="outlined"
+          error={!!fieldErrors.nome}
           style={styles.input}
         />
+        {fieldErrors.nome && (
+          <Text style={styles.errorText}>{fieldErrors.nome}</Text>
+        )}
 
+        {/* TELEFONE */}
         <TextInput
           label="Digite seu número"
           value={telefone}
-          onChangeText={(text) => setTelefone(formatPhone(text))}
+          onChangeText={(text) => {
+            setTelefone(formatPhone(text));
+            setFieldErrors((prev) => ({ ...prev, telefone: undefined }));
+          }}
           mode="outlined"
           keyboardType="phone-pad"
+          error={!!fieldErrors.telefone}
           style={styles.input}
         />
+        {fieldErrors.telefone && (
+          <Text style={styles.errorText}>{fieldErrors.telefone}</Text>
+        )}
 
+        {/* CPF */}
         <TextInput
           label="Digite seu CPF"
           value={cpf}
-          onChangeText={(text) => setCpf(formatCPF(text))}
+          onChangeText={(text) => {
+            setCpf(formatCPF(text));
+            setFieldErrors((prev) => ({ ...prev, cpf: undefined }));
+          }}
           mode="outlined"
           keyboardType="numeric"
+          error={!!fieldErrors.cpf}
           style={styles.input}
         />
+        {fieldErrors.cpf && (
+          <Text style={styles.errorText}>{fieldErrors.cpf}</Text>
+        )}
 
         <View style={styles.timeBox}>
           <Text style={styles.timeLabel}>Registro salvo em:</Text>
@@ -110,7 +151,6 @@ export default function RegisterView() {
         </View>
 
         <View style={styles.boxButton}>
-
           <Button
             mode="contained"
             onPress={() => router.push("/DashboardScreen")}
@@ -126,22 +166,16 @@ export default function RegisterView() {
               mode="contained"
               onPress={handleSave}
               style={styles.saveBtn}
-              disabled={!nome || !cpf || !telefone}
             >
               Salvar
             </Button>
-          )}
-
-          {state.error && (
-            <Text style={{ color: "red", marginTop: 8 }}>
-              {state.error}
-            </Text>
           )}
         </View>
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -214,5 +248,12 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     width: "50%",
     backgroundColor: "#F44336", // vermelho
-  }
+  },
+  errorText: {
+  color: "#D32F2F",
+  marginTop: -24,
+  marginBottom: 16,
+  fontSize: 13,
+},
+
 });

@@ -1,6 +1,6 @@
+import { useCallback, useState } from "react";
 import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
-import { useCallback, useState } from "react";
 
 export type LeadRegisterState = {
   loading: boolean;
@@ -8,8 +8,8 @@ export type LeadRegisterState = {
 };
 
 export type LeadRegisterActions = {
-  registerLead: (data: Omit<Lead, "id">) => Promise<Lead>;
-  clearError: () => string | null;
+  registerLead: (data: Omit<Lead, "id">) => Promise<void>;
+  clearError: () => void;
 };
 
 export const useLeadRegisterViewModel = () => {
@@ -17,19 +17,26 @@ export const useLeadRegisterViewModel = () => {
   const [error, setError] = useState<string | null>(null);
 
   const registerLead = useCallback(
-    async (data: Omit<Lead, "id">) => {
-      setLoading(true);
-      setError(null);
-      try {
-        await leadUseCase.createLead(data);
-      } catch (err: unknown) {
-        setError(leadUseCase.parseError(err, "Erro ao cadastrar lead"));
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  async (data: Omit<Lead, "id">) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await leadUseCase.createLead(data);
+    } catch (err: unknown) {
+      const message = leadUseCase.parseError(
+        err,
+        "Erro ao cadastrar lead"
+      );
+      setError(message);
+      throw new Error(message); // 🔥 REPASSA O ERRO
+    } finally {
+      setLoading(false);
+    }
+  },
+  []
+);
+
 
   const clearError = useCallback(() => {
     setError(null);
