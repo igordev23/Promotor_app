@@ -1,31 +1,26 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLeadEditViewModel } from "@/src/viewmodel/useLeadEditViewModel";
 import { Snackbar } from "react-native-paper";
 import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
-
-
-import { useLeadRegisterViewModel } from "@/src/viewmodel/useLeadRegisterViewModel";
-
 type FieldErrors = {
   nome?: string;
   cpf?: string;
   telefone?: string;
 };
 
-export default function RegisterView() {
-  const { state, actions } = useLeadRegisterViewModel();
+export default function EditView() {
+  const { state, actions } = useLeadEditViewModel();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [successVisible, setSuccessVisible] = useState(false);
 
-  // 🔹 Campos
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
-
-  // 🔹 Erros por campo
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const dateTime = useMemo(
@@ -48,60 +43,60 @@ export default function RegisterView() {
       .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
   };
 
+  // 🔹 Inicializa dados
+  useEffect(() => {
+    if (params.nome) setNome(String(params.nome));
+    if (params.cpf) setCpf(formatCPF(String(params.cpf)));
+    if (params.telefone) setTelefone(formatPhone(String(params.telefone)));
+  }, []);
+
   const handleSave = async () => {
   setFieldErrors({});
 
   try {
-    await actions.registerLead({
+    await actions.editLead({
+      id: String(params.id),
       nome,
       cpf: cpf.replace(/\D/g, ""),
       telefone: telefone.replace(/\D/g, ""),
     });
 
-    // ✅ Limpa campos
-    setNome("");
-    setCpf("");
-    setTelefone("");
-
-    // ✅ Feedback visual
+    // ✅ Mostra feedback
     setSuccessVisible(true);
 
+    // ⏱️ navega após mostrar mensagem
+    setTimeout(() => {
+      router.replace("/ListLeadsScreen");
+    }, 1500);
+
   } catch (err: any) {
-    const error = err.message.toLowerCase();
+    const msg = err.message.toLowerCase();
     const errors: FieldErrors = {};
 
-    if (error.includes("nome")) errors.nome = err.message;
-    if (error.includes("cpf")) errors.cpf = err.message;
-    if (error.includes("telefone")) errors.telefone = err.message;
+    if (msg.includes("nome")) errors.nome = err.message;
+    if (msg.includes("cpf")) errors.cpf = err.message;
+    if (msg.includes("telefone")) errors.telefone = err.message;
 
     setFieldErrors(errors);
   }
 };
 
 
+
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <MaterialIcons
           name="arrow-back"
           size={26}
-          onPress={() => router.back()}
+          onPress={() => router.replace("/ListLeadsScreen")}
         />
-        <Text style={styles.headerTitle}>Registrar Leads</Text>
+        <Text style={styles.headerTitle}>Editar Lead</Text>
       </View>
 
+      {/* FORM */}
       <View style={styles.card}>
-        <Button
-  icon="account-plus"
-  mode="contained"
-  style={styles.newLeadBtn}
-  onPress={() => {}}
->
-  Novo Lead
-</Button>
-
-
         {/* NOME */}
         <TextInput
           label="Nome completo"
@@ -120,7 +115,7 @@ export default function RegisterView() {
 
         {/* TELEFONE */}
         <TextInput
-          label="Digite seu número"
+          label="Telefone"
           value={telefone}
           onChangeText={(text) => {
             setTelefone(formatPhone(text));
@@ -137,7 +132,7 @@ export default function RegisterView() {
 
         {/* CPF */}
         <TextInput
-          label="Digite seu CPF"
+          label="CPF"
           value={cpf}
           onChangeText={(text) => {
             setCpf(formatCPF(text));
@@ -152,121 +147,68 @@ export default function RegisterView() {
           <Text style={styles.errorText}>{fieldErrors.cpf}</Text>
         )}
 
-        <View style={styles.timeBox}>
-          <Text style={styles.timeLabel}>Registro salvo em:</Text>
-          <Text>{dateTime}</Text>
-        </View>
-
-        <View style={styles.boxButton}>
+        {state.loading ? (
+          <ActivityIndicator />
+        ) : (
           <Button
             mode="contained"
-            onPress={() => router.push("/DashboardScreen")}
-            style={styles.cancelarBtn}
+            onPress={handleSave}
+            style={styles.saveBtn}
           >
-            Cancelar
+            Salvar
           </Button>
-
-          {state.loading ? (
-            <ActivityIndicator />
-          ) : (
-            <Button
-              mode="contained"
-              onPress={handleSave}
-              style={styles.saveBtn}
-            >
-              Salvar
-            </Button>
-          )}
-        </View>
+        )}
       </View>
-      
-<SuccessFeedbackCard
+      <SuccessFeedbackCard
   visible={successVisible}
   onDismiss={() => setSuccessVisible(false)}
-  message="Lead registrado com sucesso!"
+  message="Lead atualizado com sucesso!"
 />
 
 
     </View>
-    );
+  );
 }
 
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
-    marginTop: 20,
   },
 
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 90
+    marginBottom: 32,
   },
 
   headerTitle: {
     fontSize: 20,
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   card: {
-    backgroundColor: "white",
+    backgroundColor: "#FFF",
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E2E6",
   },
 
-  newLeadBtn: {
-    borderRadius: 50,
-    alignSelf: "center",
-    marginBottom: 32,
-    backgroundColor: "#3F51B5"
-  },
-
   input: {
-    marginBottom: 32
-  },
-
-  timeBox: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: "#E2E2E6",
-    alignSelf: "center",
-    marginBottom: 24
-  },
-
-  timeLabel: {
-    fontWeight: "600"
+    marginBottom: 24,
   },
 
   saveBtn: {
-    margin: 10,
+    marginTop: 16,
     borderRadius: 50,
-    width: "50%",
-  },
-
-  boxButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    width: "85%",
-    marginBottom: 32
-  },
-
-
-  cancelarBtn: {
-    margin: 10,
-    borderRadius: 50,
-    width: "50%",
-    backgroundColor: "#F44336", // vermelho
   },
   errorText: {
   color: "#D32F2F",
-  marginTop: -24,
+  marginTop: -18,
   marginBottom: 16,
   fontSize: 13,
 },

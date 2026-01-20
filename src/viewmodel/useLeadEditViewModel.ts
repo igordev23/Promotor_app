@@ -2,34 +2,35 @@ import { useCallback, useState } from "react";
 import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
 
-export type LeadRegisterState = {
+export type LeadEditState = {
   loading: boolean;
   error: string | null;
 };
 
-export type LeadRegisterActions = {
-  registerLead: (data: Omit<Lead, "id">) => Promise<void>;
+export type LeadEditActions = {
+  editLead: (data: Partial<Lead> & { id: string }) => Promise<void>;
   clearError: () => void;
 };
 
-export const useLeadRegisterViewModel = () => {
+export const useLeadEditViewModel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const registerLead = useCallback(
-  async (data: Omit<Lead, "id">) => {
+  const editLead = useCallback(
+  async (data: Partial<Lead> & { id: string }) => {
     setLoading(true);
     setError(null);
 
     try {
-      await leadUseCase.createLead(data);
+      await leadUseCase.editLead(data.id, {
+        nome: data.nome,
+        cpf: data.cpf,
+        telefone: data.telefone,
+      });
     } catch (err: unknown) {
-      const message = leadUseCase.parseError(
-        err,
-        "Erro ao cadastrar lead"
-      );
+      const message = leadUseCase.parseError(err, "Erro ao atualizar lead");
       setError(message);
-      throw new Error(message); // 🔥 REPASSA O ERRO
+      throw new Error(message); // 🔥 ESSENCIAL
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ export const useLeadRegisterViewModel = () => {
       error,
     },
     actions: {
-      registerLead,
+      editLead,
       clearError,
     },
   };

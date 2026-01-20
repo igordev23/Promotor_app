@@ -22,7 +22,6 @@ export default function ListarLeadsView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
   // 🔹 Carregar leads
   async function loadLeads() {
@@ -56,110 +55,28 @@ export default function ListarLeadsView() {
     }
   }
 
-  // 🔹 Selecionar
-  function toggleSelectLead(id: string) {
-    setSelectedLeads((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  }
-  async function handleRemoveSelected() {
-    try {
-      // percorre o array e remove um por um
-      for (const id of selectedLeads) {
-        await leadUseCase.removeLead(id);
-      }
-
-      // atualiza lista local após exclusões
-      const updated = allLeads.filter(
-        (lead) => !selectedLeads.includes(lead.id)
-      );
-
-      setAllLeads(updated);
-      setLeads(updated);
-
-      // limpa seleção
-      setSelectedLeads([]);
-    } catch (err) {
-      setError(leadUseCase.parseError(err));
-    }
-  }
-  function handleSelectAll() {
-    // se todas já estão selecionadas → limpa seleção
-    if (selectedLeads.length === leads.length) {
-      setSelectedLeads([]);
-      return;
-    }
-  
-    // caso contrário → seleciona todas
-    const allIds = leads.map((lead) => lead.id);
-    setSelectedLeads(allIds);
-  }
-  
-
-
-
-  // 🔹 Remover
-  async function handleRemove(id: string) {
-    try {
-      await leadUseCase.removeLead(id);
-
-      const updated = allLeads.filter((l) => l.id !== id);
-      setAllLeads(updated);
-      setLeads(updated);
-    } catch (err) {
-      setError(leadUseCase.parseError(err));
-    }
-  }
-
-  // 🔹 Formatadores
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/^(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
-  };
+ function handleEditLead(lead: Lead) {
+  router.replace({
+    pathname: "/EditLeadScreen",
+    params: {
+      id: lead.id,
+      nome: lead.nome,
+      cpf: lead.cpf,
+      telefone: lead.telefone,
+    },
+  });
+}
 
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-  <TouchableOpacity onPress={() => router.back()}>
-    <Ionicons name="arrow-back" size={24} />
-  </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
+          <Ionicons name="arrow-back" size={24} />
+        </TouchableOpacity>
 
-  <Text style={styles.title}>Listar Leads</Text>
-
-  {/* ✅ Checkbox Selecionar Todos */}
-  <TouchableOpacity onPress={handleSelectAll}>
-    <Ionicons
-      name={
-        selectedLeads.length === leads.length && leads.length > 0
-          ? "checkbox"
-          : "square-outline"
-      }
-      size={22}
-      color="#d33"
-    />
-  </TouchableOpacity>
-
-  {/* 🔴 Botão excluir em lote */}
-  {selectedLeads.length > 0 && (
-    <TouchableOpacity onPress={handleRemoveSelected}>
-      <Ionicons name="trash" size={24} color="#d33" />
-    </TouchableOpacity>
-  )}
-</View>
-
+        <Text style={styles.title}>Listar Leads</Text>
+      </View>
 
       {/* SEARCH */}
       <View style={styles.searchRow}>
@@ -195,39 +112,15 @@ export default function ListarLeadsView() {
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
 
-              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
-                <Ionicons
-                  name={
-                    selectedLeads.includes(item.id)
-                      ? "checkbox"
-                      : "square-outline"
-                  }
-                  size={22}
-                  color="#d33"
-                />
-              </TouchableOpacity>
-
-
-            </View>
-            <Text style={styles.cardInfo}>
-              Criado em 📅: {item.criadoEm}
-            </Text>
-            <Text style={styles.cardInfo}>
-              Telefone 📞: {formatPhone(item.telefone)}
-            </Text>
-            <Text style={styles.cardInfo}>
-              CPF 🪪: {formatCPF(item.cpf)}
-            </Text>
-
-            <View style={styles.cardActions}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => handleEditLead(item)}>
                 <Ionicons name="pencil" size={20} />
               </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => handleRemove(item.id)}>
-                <Ionicons name="trash" size={22} color="#d33" />
-              </TouchableOpacity>
             </View>
+
+            <Text style={styles.cardInfo}>
+              Telefone 📞: {item.telefone}
+            </Text>
+            <Text style={styles.cardInfo}>CPF 🪪: {item.cpf}</Text>
           </View>
         )}
       />
@@ -235,15 +128,13 @@ export default function ListarLeadsView() {
   );
 }
 
-
-
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
     marginTop: 20,
-    marginBottom: 110
+    marginBottom: 110,
   },
 
   header: {
@@ -263,7 +154,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 5
+    marginBottom: 5,
   },
 
   searchBox: {
@@ -279,11 +170,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 6,
-    marginBottom: 20
-  },
-
-  filterButton: {
-    padding: 6,
+    marginBottom: 20,
   },
 
   countText: {
@@ -314,12 +201,5 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 17,
     marginBottom: 7,
-  },
-
-  cardActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 16,
-    marginTop: 6,
   },
 });
