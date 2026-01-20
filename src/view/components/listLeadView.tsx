@@ -7,13 +7,14 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { Lead } from "@/src/model/entities/Lead";
 import { leadUseCase } from "@/src/useCases/LeadUseCase";
-
+import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
 export default function ListarLeadsView() {
   const router = useRouter();
 
@@ -22,6 +23,8 @@ export default function ListarLeadsView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [successVisible, setSuccessVisible] = useState(false);
 
   // 🔹 Carregar leads
   async function loadLeads() {
@@ -32,11 +35,87 @@ export default function ListarLeadsView() {
       const data = await leadUseCase.getLeads();
       setLeads(data);
       setAllLeads(data);
+      setSelectedLeads([]);
     } catch (err) {
       setError(leadUseCase.parseError(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  // 🔹 Selecionar / desmarcar lead
+  function toggleSelectLead(id: string) {
+    setSelectedLeads((prev) =>
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
+    );
+  }
+
+  // 🔹 Selecionar todos
+  function handleSelectAll() {
+    if (selectedLeads.length === leads.length) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(leads.map((l) => l.id));
+    }
+  }
+
+  // 🔹 Remover lead individual
+  async function handleRemove(id: string) {
+    Alert.alert("Confirmar", "Deseja remover este lead?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await leadUseCase.removeLead(id);
+
+            const updated = allLeads.filter((l) => l.id !== id);
+            setAllLeads(updated);
+            setLeads(updated);
+            setSelectedLeads((prev) => prev.filter((l) => l !== id));
+            // ✅ Feedback visual
+    setSuccessVisible(true);
+          } catch (err) {
+            Alert.alert("Erro", leadUseCase.parseError(err));
+          }
+        },
+      },
+    ]);
+  }
+
+  // 🔹 Remover selecionados
+  async function handleRemoveSelected() {
+    Alert.alert(
+      "Excluir Leads",
+      `Deseja excluir ${selectedLeads.length} leads?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await Promise.all(
+                selectedLeads.map((id) => leadUseCase.removeLead(id))
+              );
+
+              const updated = allLeads.filter(
+                (l) => !selectedLeads.includes(l.id)
+              );
+
+              setAllLeads(updated);
+              setLeads(updated);
+              setSelectedLeads([]);
+              // ✅ Feedback visual
+    setSuccessVisible(true);
+            } catch (err) {
+              Alert.alert("Erro", leadUseCase.parseError(err));
+            }
+          },
+        },
+      ]
+    );
   }
 
   useEffect(() => {
@@ -50,8 +129,7 @@ export default function ListarLeadsView() {
     if (!text.trim()) {
       setLeads(allLeads);
     } else {
-      const filtered = leadUseCase.filterLeads(allLeads, text);
-      setLeads(filtered);
+      setLeads(leadUseCase.filterLeads(allLeads, text));
     }
   }
 
@@ -76,57 +154,94 @@ export default function ListarLeadsView() {
         </TouchableOpacity>
 
         <Text style={styles.title}>Listar Leads</Text>
+
+        <TouchableOpacity onPress={handleSelectAll}>
+          <Ionicons
+            name={
+              selectedLeads.length === leads.length && leads.length > 0
+                ? "checkbox"
+                : "square-outline"
+            }
+            size={22}
+            color="#d33"
+          />
+        </TouchableOpacity>
+
+        {selectedLeads.length > 0 && (
+          <TouchableOpacity onPress={handleRemoveSelected}>
+            <Ionicons name="trash" size={24} color="#d33" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* SEARCH */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#777" />
-          <TextInput
-            style={styles.input}
-            placeholder="Procure por Leads Registrados"
-            value={busca}
-            onChangeText={handleSearch}
-          />
-        </View>
+      <View style={styles.searchBox}>
+        <Ionicons name="search" size={18} color="#777" />
+        <TextInput
+          style={styles.input}
+          placeholder="Procure por Leads Registrados"
+          value={busca}
+          onChangeText={handleSearch}
+        />
       </View>
 
-      {/* LOADING */}
       {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
 
-      {/* ERROR */}
-      {error && <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>}
+      {error && <Text style={{ color: "red" }}>{error}</Text>}
 
-      {/* COUNT */}
       {!loading && (
         <Text style={styles.countText}>{leads.length} Leads encontrados</Text>
       )}
 
-      {/* LIST */}
       <FlatList
         data={leads}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
 
-              <TouchableOpacity onPress={() => handleEditLead(item)}>
-                <Ionicons name="pencil" size={20} />
+              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
+                <Ionicons
+                  name={
+                    selectedLeads.includes(item.id)
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={22}
+                  color="#d33"
+                />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.cardInfo}>
-              Telefone 📞: {item.telefone}
-            </Text>
-            <Text style={styles.cardInfo}>CPF 🪪: {item.cpf}</Text>
+            <Text style={styles.cardInfo}>📅 {item.criadoEm}</Text>
+            <Text style={styles.cardInfo}>📞 {item.telefone}</Text>
+            <Text style={styles.cardInfo}>🪪 {item.cpf}</Text>
+
+            <View style={styles.cardActions}>
+              <TouchableOpacity onPress={() => handleEditLead(item)}>
+                <Ionicons name="pencil" size={20} />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => handleRemove(item.id)}>
+                <Ionicons name="trash" size={22} color="#d33" />
+              </TouchableOpacity>
+            </View>
+            
           </View>
         )}
+        
+      />
+      <SuccessFeedbackCard
+        visible={successVisible}
+        onDismiss={() => setSuccessVisible(false)}
+        message="Lead excluido com sucesso!"
       />
     </View>
+    
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -134,7 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FF",
     padding: 24,
     marginTop: 20,
-    marginBottom: 110,
+    marginBottom: 110
   },
 
   header: {
@@ -154,7 +269,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 5,
+    marginBottom: 5
   },
 
   searchBox: {
@@ -170,7 +285,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 6,
-    marginBottom: 20,
+    marginBottom: 20
+  },
+
+  filterButton: {
+    padding: 6,
   },
 
   countText: {
@@ -201,5 +320,12 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 17,
     marginBottom: 7,
+  },
+
+  cardActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 16,
+    marginTop: 6,
   },
 });
