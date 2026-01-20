@@ -109,7 +109,7 @@ export default function DashboardView() {
         />
         <Text
           style={styles.actionText}
-          onPress={() => router.push("/RegisterLeadScreen")}
+          onPress={() => router.replace("/RegisterLeadScreen")}
         >
           Registrar Leads
         </Text>

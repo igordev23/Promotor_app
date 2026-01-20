@@ -4,7 +4,8 @@ import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useLeadEditViewModel } from "@/src/viewmodel/useLeadEditViewModel";
-
+import { Snackbar } from "react-native-paper";
+import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
 type FieldErrors = {
   nome?: string;
   cpf?: string;
@@ -15,6 +16,7 @@ export default function EditView() {
   const { state, actions } = useLeadEditViewModel();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [successVisible, setSuccessVisible] = useState(false);
 
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
@@ -59,8 +61,13 @@ export default function EditView() {
       telefone: telefone.replace(/\D/g, ""),
     });
 
-    // ✅ só navega se NÃO deu erro
-    router.replace("/ListLeadsScreen");
+    // ✅ Mostra feedback
+    setSuccessVisible(true);
+
+    // ⏱️ navega após mostrar mensagem
+    setTimeout(() => {
+      router.replace("/ListLeadsScreen");
+    }, 1500);
 
   } catch (err: any) {
     const msg = err.message.toLowerCase();
@@ -73,6 +80,7 @@ export default function EditView() {
     setFieldErrors(errors);
   }
 };
+
 
 
   return (
@@ -151,6 +159,13 @@ export default function EditView() {
           </Button>
         )}
       </View>
+      <SuccessFeedbackCard
+  visible={successVisible}
+  onDismiss={() => setSuccessVisible(false)}
+  message="Lead atualizado com sucesso!"
+/>
+
+
     </View>
   );
 }

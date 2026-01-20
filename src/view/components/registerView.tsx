@@ -3,6 +3,9 @@ import { View, StyleSheet } from "react-native";
 import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Snackbar } from "react-native-paper";
+import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
+
 
 import { useLeadRegisterViewModel } from "@/src/viewmodel/useLeadRegisterViewModel";
 
@@ -15,6 +18,7 @@ type FieldErrors = {
 export default function RegisterView() {
   const { state, actions } = useLeadRegisterViewModel();
   const router = useRouter();
+  const [successVisible, setSuccessVisible] = useState(false);
 
   // 🔹 Campos
   const [nome, setNome] = useState("");
@@ -54,10 +58,13 @@ export default function RegisterView() {
       telefone: telefone.replace(/\D/g, ""),
     });
 
-    // ✅ Sucesso
+    // ✅ Limpa campos
     setNome("");
     setCpf("");
     setTelefone("");
+
+    // ✅ Feedback visual
+    setSuccessVisible(true);
 
   } catch (err: any) {
     const error = err.message.toLowerCase();
@@ -172,8 +179,16 @@ export default function RegisterView() {
           )}
         </View>
       </View>
+      
+<SuccessFeedbackCard
+  visible={successVisible}
+  onDismiss={() => setSuccessVisible(false)}
+  message="Lead registrado com sucesso!"
+/>
+
+
     </View>
-  );
+    );
 }
 
 

@@ -56,7 +56,7 @@ export default function ListarLeadsView() {
   }
 
  function handleEditLead(lead: Lead) {
-  router.push({
+  router.replace({
     pathname: "/EditLeadScreen",
     params: {
       id: lead.id,
@@ -71,7 +71,7 @@ export default function ListarLeadsView() {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
           <Ionicons name="arrow-back" size={24} />
         </TouchableOpacity>
 
