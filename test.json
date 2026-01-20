@@ -1,41 +1,41 @@
 {
   "expo": {
-    "name": "PromotorApp",
-    "slug": "PromotorApp",
-    "version": "1.0.0",
+    "name": "NomeBr",
+    "slug": "NomeBr",
+    "version": "2.2.0",
     "orientation": "portrait",
-    "icon": "./assets/iconP.png",
-    "scheme": "myapp",
+    "icon": "./assets/iconG.jpg",
+    "scheme": "nomebr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "splash": {
-      "image": "./assets/splash-iconP.png",
+      "image": "./assets/splash-iconG.png",
       "resizeMode": "contain",
       "backgroundColor": "#E6F4FE"
     },
    "android": {
   "adaptiveIcon": {
-    "foregroundImage": "./assets/iconP.png",
+    "foregroundImage": "./assets/iconG.jpg",
     "backgroundColor": "#E6F4FE"
   },
   "edgeToEdgeEnabled": true,
   "predictiveBackGestureEnabled": false,
-  "package": "com.avantech.promotorapp",
-   "versionCode": 1
+  "package": "com.avantech.nomebr",
+   "versionCode": 4
 },
     "web": {
       "output": "static",
-      "favicon": "./assets/splash-iconP.png"
+      "favicon": "./assets/splash-iconG.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-iconP.png",
+          "image": "./assets/splash-iconG.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -43,8 +43,15 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId"
+: "ca-app-pub-4256068454909415~5078817264",
+           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
       ]
-     
     ],
     "experiments": {
       "typedRoutes": true,
