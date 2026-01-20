@@ -1,32 +1,14 @@
-import { useState, useCallback, useEffect, useContext } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authService } from "../model/services/AuthService";
 import { journeyUseCase } from "../useCases/JourneyUseCase";
 import { leadUseCase } from "../useCases/LeadUseCase";
 import { locationUseCase } from "../useCases/LocationUseCase";
-import { JourneyContext } from "../contexts/JourneyContextBase";
+import { JourneyContext, JourneyContextType } from "./JourneyContextBase";
 
-export type DashboardState = {
-  userName: string;
-  isWorking: boolean;
-  totalLeads: number;
-  loading: boolean;
-  error: string | null;
-  activeSince?: number | null;
-  elapsedMs: number;
-};
+const ACTIVE_SINCE_KEY = "journey_active_since";
 
-export type DashboardActions = {
-  loadData: () => Promise<number | void>;
-  toggleWorkStatus: () => Promise<number | void>;
-};
-
-export const useDashboardViewModel = (): {
-  state: DashboardState;
-  actions: DashboardActions;
-} => {
-  const ctx = useContext(JourneyContext);
-  const ACTIVE_SINCE_KEY = "journey_active_since";
+export function JourneyProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
@@ -51,8 +33,8 @@ export const useDashboardViewModel = (): {
           stored !== null
             ? Number(stored)
             : typeof journey.inicio === "string"
-              ? Date.parse(journey.inicio)
-              : (journey.inicio ?? Date.now());
+            ? Date.parse(journey.inicio)
+            : (journey.inicio ?? Date.now());
         setActiveSince(start || Date.now());
       } else {
         setActiveSince(null);
@@ -111,8 +93,8 @@ export const useDashboardViewModel = (): {
           stored !== null
             ? Number(stored)
             : typeof journey.inicio === "string"
-              ? Date.parse(journey.inicio)
-              : (journey.inicio ?? Date.now());
+            ? Date.parse(journey.inicio)
+            : (journey.inicio ?? Date.now());
         setActiveSince(start || Date.now());
       } else {
         setActiveSince(null);
@@ -144,26 +126,22 @@ export const useDashboardViewModel = (): {
     };
   }, [isWorking, activeSince]);
 
-  if (ctx) {
-    return {
-      state: ctx.state,
-      actions: ctx.actions,
-    };
-  } else {
-    return {
-      state: {
-        userName,
-        isWorking,
-        totalLeads,
-        loading,
-        error,
-        activeSince,
-        elapsedMs,
-      },
-      actions: {
-        loadData,
-        toggleWorkStatus,
-      },
-    };
-  }
-};
+  const value = useMemo<JourneyContextType>(() => ({
+    state: {
+      userName,
+      isWorking,
+      totalLeads,
+      loading,
+      error,
+      activeSince,
+      elapsedMs,
+    },
+    actions: {
+      loadData,
+      toggleWorkStatus,
+    },
+  }), [userName, isWorking, totalLeads, loading, error, activeSince, elapsedMs, loadData, toggleWorkStatus]);
+
+  return <JourneyContext.Provider value={value}>{children}</JourneyContext.Provider>;
+}
+

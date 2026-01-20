@@ -150,4 +150,42 @@ describe("useDashboardViewModel", () => {
     expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(12000);
     jest.useRealTimers();
   });
+
+  test("should not reset activeSince on reload while active", async () => {
+    jest.useFakeTimers();
+    const startDate = new Date("2020-01-01T00:00:00Z");
+    const nowDate = new Date("2020-01-01T00:00:10Z");
+    jest.setSystemTime(nowDate);
+
+    (journeyUseCase.getJourneyStatus as jest.Mock).mockResolvedValue({
+      status: "ativo",
+      promotor_id: mockUser.id,
+      inicio: startDate.toISOString(),
+    });
+
+    (leadUseCase.getLeads as jest.Mock).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    await act(async () => {
+      await result.current.actions.loadData();
+    });
+
+    const initialActiveSince = result.current.state.activeSince;
+    const initialElapsed = result.current.state.elapsedMs;
+    expect(initialActiveSince).toBe(Date.parse(startDate.toISOString()));
+    expect(initialElapsed).toBeGreaterThanOrEqual(10000);
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    await act(async () => {
+      await result.current.actions.loadData();
+    });
+
+    expect(result.current.state.activeSince).toBe(initialActiveSince);
+    expect(result.current.state.elapsedMs).toBeGreaterThanOrEqual(12000);
+    jest.useRealTimers();
+  });
 });
