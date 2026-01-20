@@ -64,6 +64,41 @@ export default function ListarLeadsView() {
         : [...prev, id]
     );
   }
+  async function handleRemoveSelected() {
+    try {
+      // percorre o array e remove um por um
+      for (const id of selectedLeads) {
+        await leadUseCase.removeLead(id);
+      }
+
+      // atualiza lista local após exclusões
+      const updated = allLeads.filter(
+        (lead) => !selectedLeads.includes(lead.id)
+      );
+
+      setAllLeads(updated);
+      setLeads(updated);
+
+      // limpa seleção
+      setSelectedLeads([]);
+    } catch (err) {
+      setError(leadUseCase.parseError(err));
+    }
+  }
+  function handleSelectAll() {
+    // se todas já estão selecionadas → limpa seleção
+    if (selectedLeads.length === leads.length) {
+      setSelectedLeads([]);
+      return;
+    }
+  
+    // caso contrário → seleciona todas
+    const allIds = leads.map((lead) => lead.id);
+    setSelectedLeads(allIds);
+  }
+  
+
+
 
   // 🔹 Remover
   async function handleRemove(id: string) {
@@ -98,11 +133,33 @@ export default function ListarLeadsView() {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Listar Leads</Text>
-      </View>
+  <TouchableOpacity onPress={() => router.back()}>
+    <Ionicons name="arrow-back" size={24} />
+  </TouchableOpacity>
+
+  <Text style={styles.title}>Listar Leads</Text>
+
+  {/* ✅ Checkbox Selecionar Todos */}
+  <TouchableOpacity onPress={handleSelectAll}>
+    <Ionicons
+      name={
+        selectedLeads.length === leads.length && leads.length > 0
+          ? "checkbox"
+          : "square-outline"
+      }
+      size={22}
+      color="#d33"
+    />
+  </TouchableOpacity>
+
+  {/* 🔴 Botão excluir em lote */}
+  {selectedLeads.length > 0 && (
+    <TouchableOpacity onPress={handleRemoveSelected}>
+      <Ionicons name="trash" size={24} color="#d33" />
+    </TouchableOpacity>
+  )}
+</View>
+
 
       {/* SEARCH */}
       <View style={styles.searchRow}>
@@ -150,25 +207,26 @@ export default function ListarLeadsView() {
                 />
               </TouchableOpacity>
 
-              <Text style={styles.cardInfo}>
-                Criado em 📅: {item.criadoEm}
-              </Text>
-              <Text style={styles.cardInfo}>
-                Telefone 📞: {formatPhone(item.telefone)}
-              </Text>
-              <Text style={styles.cardInfo}>
-                CPF 🪪: {formatCPF(item.cpf)}
-              </Text>
 
-              <View style={styles.cardActions}>
-                <TouchableOpacity>
-                  <Ionicons name="pencil" size={20} />
-                </TouchableOpacity>
+            </View>
+            <Text style={styles.cardInfo}>
+              Criado em 📅: {item.criadoEm}
+            </Text>
+            <Text style={styles.cardInfo}>
+              Telefone 📞: {formatPhone(item.telefone)}
+            </Text>
+            <Text style={styles.cardInfo}>
+              CPF 🪪: {formatCPF(item.cpf)}
+            </Text>
 
-                <TouchableOpacity onPress={() => handleRemove(item.id)}>
-                  <Ionicons name="trash" size={22} color="#d33" />
-                </TouchableOpacity>
-              </View>
+            <View style={styles.cardActions}>
+              <TouchableOpacity>
+                <Ionicons name="pencil" size={20} />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => handleRemove(item.id)}>
+                <Ionicons name="trash" size={22} color="#d33" />
+              </TouchableOpacity>
             </View>
           </View>
         )}
