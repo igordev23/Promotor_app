@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { authService } from "../model/services/AuthService";
 import { AuthContext, AuthContextType, AuthUser } from "./AuthContextBase";
+import { parseLoginError } from "../utils/authErrors";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   setError(null);
 
   try {
-    // 🔴 CREDENCIAIS FIXAS — MODO TESTE
+    // 🔴 MODO TESTE
     const testEmail = "promotor2@test.com";
     const testPassword = "12345678";
 
@@ -49,18 +50,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
 
-    setError("Erro ao realizar login de teste");
+    setError("Não foi possível autenticar. Tente novamente.");
     return false;
 
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Erro no login";
-    setError(msg);
+    console.error("Login error:", err); // 👈 mantém log técnico
+
+    const friendlyMessage = parseLoginError(err);
+    setError(friendlyMessage);
+
     return false;
 
   } finally {
     setLoading(false);
   }
 }, [refreshUser]);
+
 
 
   const logout = useCallback(async () => {
