@@ -4,8 +4,17 @@ import { Slot, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as Linking from "expo-linking";
 import supabase from "../config/supabase";
+import { JourneyProvider } from "../contexts/JourneyContext";
+import { AuthProvider } from "../contexts/AuthContext";
 
-const theme = { ...MD3LightTheme, colors: { ...MD3LightTheme.colors, primary: "#3F51B5", background: "#F7F9FF" } };
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: "#3F51B5",
+    background: "#F7F9FF",
+  },
+};
 
 export default function RootLayout() {
   const router = useRouter();
@@ -46,7 +55,9 @@ export default function RootLayout() {
     });
 
     // Captura link se o app estava em background
-    const sub = Linking.addEventListener("url", (event) => handleDeepLink(event.url));
+    const sub = Linking.addEventListener("url", (event) =>
+      handleDeepLink(event.url)
+    );
 
     return () => sub.remove();
   }, []);
@@ -55,7 +66,11 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={theme}>
-      <Slot />
+      <AuthProvider>
+        <JourneyProvider>
+          <Slot />
+        </JourneyProvider>
+      </AuthProvider>
     </PaperProvider>
   );
 }

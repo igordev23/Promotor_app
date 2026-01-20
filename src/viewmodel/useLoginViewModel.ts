@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { authService } from "../model/services/AuthService";
+import { AuthContext } from "../contexts/AuthContextBase";
 
 export type LoginState = {
   loading: boolean;
@@ -15,6 +16,7 @@ export type LoginActions = {
 };
 
 export const useLoginViewModel = () => {
+  const ctx = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -67,17 +69,33 @@ export const useLoginViewModel = () => {
     }
   };
 
-  return {
-    state: {
-      loading,
-      error,
-      isAuthenticated,
-    },
-    actions: {
-      login,
-      logout,
-      clearError,
-      checkAuthStatus,
-    },
-  };
+  if (ctx) {
+    return {
+      state: {
+        loading: ctx.state.loading,
+        error: ctx.state.error,
+        isAuthenticated: ctx.state.isAuthenticated,
+      },
+      actions: {
+        login: ctx.actions.login,
+        logout: ctx.actions.logout,
+        clearError: ctx.actions.clearError,
+        checkAuthStatus: ctx.actions.checkAuthStatus,
+      },
+    };
+  } else {
+    return {
+      state: {
+        loading,
+        error,
+        isAuthenticated,
+      },
+      actions: {
+        login,
+        logout,
+        clearError,
+        checkAuthStatus,
+      },
+    };
+  }
 };
