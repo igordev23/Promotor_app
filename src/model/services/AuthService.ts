@@ -32,9 +32,7 @@ export class AuthService implements AuthRepository {
 
   async recoverPassword(email: string): Promise<boolean> {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://http://localhost:5173/resetPasswordScreen",
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
 
     if (error) {
       console.error("Erro ao recuperar senha:", error);
@@ -48,7 +46,6 @@ export class AuthService implements AuthRepository {
   }
 }
 
-  
   async logout(): Promise<void> {
     try {
       await supabase.auth.signOut();
