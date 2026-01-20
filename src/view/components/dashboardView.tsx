@@ -53,8 +53,6 @@ export default function DashboardView() {
         <MaterialIcons name="account-circle" size={28} color="#3F51B5" />
       </View>
 
-      <Text style={styles.userText}>Olá, {userName}</Text>
-
       {/* Loading */}
       {loading && (
         <ActivityIndicator size="large" color="#3F51B5" />
@@ -67,13 +65,15 @@ export default function DashboardView() {
 
       {/* Status */}
       <Text style={styles.status}>
-        Status da Jornada {isWorking ? "🟢 Ativa" : "🔴 Inativa"}
+        Status da Jornada {isWorking ? "🟢" : "🔴"}
       </Text>
 
       {/* Botão Iniciar / Encerrar */}
       <Button
         mode="contained"
         style={styles.mainButton}
+        contentStyle={styles.mainButtonContent}
+        labelStyle={styles.mainButtonLabel}
         onPress={toggleWorkStatus}
         disabled={loading}
       >
@@ -81,7 +81,7 @@ export default function DashboardView() {
       </Button>
 
       {/* Cards */}
-      <View style={styles.metricsRow}>
+     <View style={styles.metricsRow}> 
         <Card style={styles.card}>
           <Card.Content>
             <Text style={styles.metricValue}>{totalLeads}</Text>
@@ -134,7 +134,9 @@ export default function DashboardView() {
       {/* Sair */}
       <Button
         mode="contained"
-        style={styles.exitButton}
+        style={styles.mainButton}
+        contentStyle={styles.mainButtonContent}
+        labelStyle={styles.mainButtonLabel}
         onPress={handleLogout}
       >
         Sair
@@ -147,7 +149,8 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#F7F9FF",
-    padding: 24
+    padding: 24,
+    marginTop: 20
   },
   header: {
     flexDirection: "row",
@@ -160,57 +163,79 @@ const styles = StyleSheet.create({
     color: "#1B1B1F"
   },
   status: {
+    fontSize: 25,
+    fontWeight: "700",
     color: "#3F51B5",
     textAlign: "center",
-    marginBottom: 12,
-    fontWeight: "600"
+    margin: 32,
   },
   mainButton: {
     alignSelf: "center",
     borderRadius: 50,
-    marginBottom: 16
+    marginTop: 24,
+    marginBottom: 32,
+    width: '55%',       // largura do botão
   },
+  
+  mainButtonContent: {
+    paddingVertical: 10,  // altura do botão
+    paddingHorizontal: 2,
+  },
+  
+  mainButtonLabel: {
+    fontSize: 18,     // tamanho da fonte
+    fontWeight: "600",
+  },
+  
   timeText: {
     textAlign: "center",
     color: "#1B1B1F",
     marginBottom: 6
   },
   metricsRow: {
+  
     flexDirection: "row",
     justifyContent: "space-between",
     marginVertical: 24
   },
   card: {
-    width: "47%",
+    width: "44%",
     backgroundColor: "#E2E2E6",
-    borderRadius: 16
+    borderRadius: 16,
+    padding: 15,
   },
   metricValue: {
     textAlign: "center",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600"
   },
   metricInfo: {
     textAlign: "center",
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "400"
   },
   actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24
+    marginBottom: 24,
+    marginTop: 48,
   },
   iconBox: {
     backgroundColor: "#3F51B5",
-    padding: 12,
+    padding: 25,
     borderRadius: 12,
-    marginRight: 12
+    marginRight: 12,
+    marginLeft: 30,
   },
   actionText: {
+    fontSize: 25,
+    fontWeight: "700",
     color: "#3F51B5",
-    fontSize: 16,
-    fontWeight: "600"
+    textAlign: "center",
+    marginTop: 3,
   },
+
+
   exitButton: {
     marginTop: "auto",
     alignSelf: "center",

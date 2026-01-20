@@ -2,25 +2,39 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import supabase from "../../config/supabase";
 import { AuthRepository } from "../repositories/AuthRepository";
 
+import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const TOKEN_KEY = "auth_token";
 
-export class AuthService implements AuthRepository {
-  async login(email: string, password: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+export class AuthService {
+  private api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 60000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-      if (error) {
-        console.error("Erro no login:", error);
-        return false;
-      }
+  constructor() {
+    this.api.interceptors.request.use(
+      async (config) => {
+        const token = await AsyncStorage.getItem(TOKEN_KEY);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
 
-      if (data.session?.access_token) {
-        await AsyncStorage.setItem(TOKEN_KEY, data.session.access_token);
-        return true;
+    this.api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          await AsyncStorage.removeItem(TOKEN_KEY);
+        }
+        return Promise.reject(error);
       }
 
       return false;
@@ -44,7 +58,6 @@ export class AuthService implements AuthRepository {
     console.error("Erro inesperado:", error);
     return false;
   }
-}
 
   async logout(): Promise<void> {
     try {
@@ -57,20 +70,20 @@ export class AuthService implements AuthRepository {
   }
 
   async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(TOKEN_KEY);
+    return AsyncStorage.getItem(TOKEN_KEY);
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const token = await this.getToken();
-    return !!token;
+    return !!(await this.getToken());
   }
 
-  async getUser(): Promise<{ email?: string; id: string } | null> {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user ? { email: user.email, id: user.id } : null;
+  async getUser(): Promise<{ id: string; email: string } | null> {
+    try {
+      const { data } = await this.api.get('/auth/me');
+      return data;
+    } catch {
+      return null;
+    }
   }
 }
-
 export const authService = new AuthService();

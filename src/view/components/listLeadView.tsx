@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+
 import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
 
 export default function ListarLeadsView() {
@@ -33,6 +34,16 @@ export default function ListarLeadsView() {
       actions.searchLeads(text);
     }
   };
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+
+  const toggleSelectLead = (id: string) => {
+    setSelectedLeads((prev) =>
+      prev.includes(id)
+        ? prev.filter((item) => item !== id) // desmarca
+        : [...prev, id] // marca
+    );
+  };
+
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
 
@@ -112,12 +123,22 @@ export default function ListarLeadsView() {
 
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
-              <Ionicons name="alert-circle-outline" size={22} color="#d33" />
+              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
+                <Ionicons
+                  name={
+                    selectedLeads.includes(item.id)
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={22}
+                  color="#d33"
+                />
+              </TouchableOpacity>
             </View>
 
-            <Text>Criado em 📅:  {item.criadoEm}</Text>
-            <Text>Telefone 📞:     {formatPhone(item.telefone)}</Text>
-            <Text>CPF 🪪:              {formatCPF(item.cpf)}</Text>
+            <Text style={styles.cardInfo}>Criado em 📅:  {item.criadoEm}</Text>
+            <Text style={styles.cardInfo}>Telefone 📞:     {formatPhone(item.telefone)}</Text>
+            <Text style={styles.cardInfo}>CPF 🪪:              {formatCPF(item.cpf)}</Text>
 
             <View style={styles.cardActions}>
               <TouchableOpacity>
@@ -139,16 +160,17 @@ export default function ListarLeadsView() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 18,
-    backgroundColor: "#F4F4F4",
+    flexGrow: 1,
+    backgroundColor: "#F7F9FF",
+    padding: 24,
+    marginTop: 20,
   },
 
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 10,
+    marginBottom: 20,
   },
 
   title: {
@@ -161,6 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    marginBottom: 5
   },
 
   searchBox: {
@@ -176,6 +199,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 6,
+    marginBottom: 20
   },
 
   filterButton: {
@@ -185,7 +209,7 @@ const styles = StyleSheet.create({
   countText: {
     marginTop: 10,
     marginBottom: 8,
-    fontSize: 14,
+    fontSize: 20,
   },
 
   card: {
@@ -203,6 +227,13 @@ const styles = StyleSheet.create({
 
   cardTitle: {
     fontWeight: "600",
+    fontSize: 20,
+  },
+
+  cardInfo: {
+    fontWeight: "400",
+    fontSize: 17,
+    marginBottom: 7,
   },
 
   cardActions: {
