@@ -22,26 +22,30 @@ export const useLoginViewModel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const success = await authService.login(email, password);
-      if (success) {
-        setIsAuthenticated(true);
-        return true;
-      } else {
-        setError("Credenciais inválidas");
-        return false;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro no login";
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
+  try {
+    await authService.login(email, password);
+
+    setIsAuthenticated(true);
+    return true;
+
+  } catch (err) {
+    let errorMessage = "Erro inesperado ao realizar login";
+
+    if (err instanceof Error) {
+      errorMessage = err.message;
     }
-  };
+
+    setError(errorMessage);
+    return false;
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const logout = async (): Promise<void> => {
     setLoading(true);
