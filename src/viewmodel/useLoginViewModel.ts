@@ -1,6 +1,8 @@
 import { useContext, useState } from "react";
 import { authService } from "../model/services/AuthService";
 import { AuthContext } from "../contexts/AuthContextBase";
+const TEST_EMAIL = "promotor2@test.com";
+const TEST_PASSWORD = "12345678";
 
 export type LoginState = {
   loading: boolean;
@@ -21,30 +23,29 @@ export const useLoginViewModel = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+ const login = async (_email: string, _password: string): Promise<boolean> => {
   setLoading(true);
   setError(null);
 
   try {
-    await authService.login(email, password);
+    // 🔴 CREDENCIAIS FIXAS PARA FASE DE TESTE
+    const testEmail = "promotor2@test.com";
+    const testPassword = "12345678";
+
+    await authService.login(testEmail, testPassword);
 
     setIsAuthenticated(true);
     return true;
 
   } catch (err) {
-    let errorMessage = "Erro inesperado ao realizar login";
-
-    if (err instanceof Error) {
-      errorMessage = err.message;
-    }
-
-    setError(errorMessage);
+    setError("Erro inesperado ao realizar login");
     return false;
 
   } finally {
     setLoading(false);
   }
 };
+
 
 
   const logout = async (): Promise<void> => {

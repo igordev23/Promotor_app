@@ -32,26 +32,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const ok = await authService.login(email, password);
-      if (ok) {
-        setIsAuthenticated(true);
-        await refreshUser();
-        return true;
-      }
-      setError("Credenciais inválidas");
-      return false;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro no login";
-      setError(msg);
-      return false;
-    } finally {
-      setLoading(false);
+  const login = useCallback(async (_email: string, _password: string) => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    // 🔴 CREDENCIAIS FIXAS — MODO TESTE
+    const testEmail = "promotor2@test.com";
+    const testPassword = "12345678";
+
+    const ok = await authService.login(testEmail, testPassword);
+
+    if (ok) {
+      setIsAuthenticated(true);
+      await refreshUser();
+      return true;
     }
-  }, [refreshUser]);
+
+    setError("Erro ao realizar login de teste");
+    return false;
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Erro no login";
+    setError(msg);
+    return false;
+
+  } finally {
+    setLoading(false);
+  }
+}, [refreshUser]);
+
 
   const logout = useCallback(async () => {
     setLoading(true);
