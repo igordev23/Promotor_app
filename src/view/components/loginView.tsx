@@ -7,7 +7,8 @@ import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-
+const TEST_EMAIL = "promotor2@test.com";
+const TEST_PASSWORD = "12345678";
 
 
 export default function LoginView() {
