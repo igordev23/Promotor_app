@@ -145,103 +145,110 @@ export default function ListarLeadsView() {
   });
 }
 
-  return (
-    <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
-          <Ionicons name="arrow-back" size={24} />
-        </TouchableOpacity>
+ return (
+  <View style={styles.container}>
+    {/* HEADER */}
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
+        <Ionicons name="arrow-back" size={24} />
+      </TouchableOpacity>
 
-        <Text style={styles.title}>Listar Leads</Text>
+      <Text style={styles.title}>Listar Leads</Text>
 
-        <TouchableOpacity onPress={handleSelectAll}>
-          <Ionicons
-            name={
-              selectedLeads.length === leads.length && leads.length > 0
-                ? "checkbox"
-                : "square-outline"
-            }
-            size={22}
-            color="#d33"
-          />
-        </TouchableOpacity>
-
-        {selectedLeads.length > 0 && (
-          <TouchableOpacity onPress={handleRemoveSelected}>
-            <Ionicons name="trash" size={24} color="#d33" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* SEARCH */}
-      <View style={styles.searchBox}>
-        <Ionicons name="search" size={18} color="#777" />
-        <TextInput
-          style={styles.input}
-          placeholder="Procure por Leads Registrados"
-          value={busca}
-          onChangeText={handleSearch}
+      <TouchableOpacity onPress={handleSelectAll}>
+        <Ionicons
+          name={
+            selectedLeads.length === leads.length && leads.length > 0
+              ? "checkbox"
+              : "square-outline"
+          }
+          size={22}
+          color="#d33"
         />
-      </View>
+      </TouchableOpacity>
 
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
-
-      {error && <Text style={{ color: "red" }}>{error}</Text>}
-
-      {!loading && (
-        <Text style={styles.countText}>{leads.length} Leads encontrados</Text>
+      {selectedLeads.length > 0 && (
+        <TouchableOpacity onPress={handleRemoveSelected}>
+          <Ionicons name="trash" size={24} color="#d33" />
+        </TouchableOpacity>
       )}
-
-      <FlatList
-        data={leads}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardTop}>
-              <Text style={styles.cardTitle}>{item.nome}</Text>
-
-              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
-                <Ionicons
-                  name={
-                    selectedLeads.includes(item.id)
-                      ? "checkbox"
-                      : "square-outline"
-                  }
-                  size={22}
-                  color="#d33"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.cardInfo}>📅 {item.criadoEm}</Text>
-            <Text style={styles.cardInfo}>📞 {item.telefone}</Text>
-            <Text style={styles.cardInfo}>🪪 {item.cpf}</Text>
-
-            <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => handleEditLead(item)}>
-                <Ionicons name="pencil" size={20} />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => handleRemove(item.id)}>
-                <Ionicons name="trash" size={22} color="#d33" />
-              </TouchableOpacity>
-            </View>
-            
-          </View>
-        )}
-        
-      />
-      <SuccessFeedbackCard
-        visible={successVisible}
-        onDismiss={() => setSuccessVisible(false)}
-        message="Lead excluido com sucesso!"
-      />
     </View>
-    
-  );
-}
 
+    {/* LOADING */}
+    {loading && <ActivityIndicator style={{ marginVertical: 20 }} />}
+
+    {/* ERROR */}
+    {error && <Text style={{ color: "red" }}>{error}</Text>}
+
+    {/* LISTA */}
+    <FlatList
+      data={leads}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{ paddingBottom: 120 }}
+      ListHeaderComponent={
+        <>
+          {/* SEARCH */}
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#777" />
+            <TextInput
+              style={styles.input}
+              placeholder="Procure por Leads Registrados"
+              value={busca}
+              onChangeText={handleSearch}
+            />
+          </View>
+
+          {!loading && (
+            <Text style={styles.countText}>
+              {leads.length} Leads encontrados
+            </Text>
+          )}
+        </>
+      }
+      renderItem={({ item }) => (
+        <View style={styles.card}>
+          <View style={styles.cardTop}>
+            <Text style={styles.cardTitle}>{item.nome}</Text>
+
+            <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
+              <Ionicons
+                name={
+                  selectedLeads.includes(item.id)
+                    ? "checkbox"
+                    : "square-outline"
+                }
+                size={22}
+                color="#d33"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.cardInfo}>📅 {item.criadoEm}</Text>
+          <Text style={styles.cardInfo}>📞 {item.telefone}</Text>
+          <Text style={styles.cardInfo}>🪪 {item.cpf}</Text>
+
+          <View style={styles.cardActions}>
+            <TouchableOpacity onPress={() => handleEditLead(item)}>
+              <Ionicons name="pencil" size={20} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => handleRemove(item.id)}>
+              <Ionicons name="trash" size={22} color="#d33" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    />
+
+    {/* FEEDBACK */}
+    <SuccessFeedbackCard
+      visible={successVisible}
+      onDismiss={() => setSuccessVisible(false)}
+      message="Lead excluído com sucesso!"
+    />
+  </View>
+);
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -273,20 +280,20 @@ const styles = StyleSheet.create({
   },
 
   searchBox: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    height: 42,
-  },
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#FFF",
+  borderRadius: 12,
+  paddingHorizontal: 10,
+  height: 42,
+},
 
-  input: {
-    flex: 1,
-    marginLeft: 6,
-    marginBottom: 20
-  },
+input: {
+  flex: 1,
+  marginLeft: 6,
+  paddingVertical: 0, // Android fix
+},
 
   filterButton: {
     padding: 6,
