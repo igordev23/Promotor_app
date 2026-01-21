@@ -19,7 +19,7 @@ export function SuccessFeedbackCard({
   visible,
   message,
   onDismiss,
-  duration = 2000,
+  duration = 800,
 }: SuccessFeedbackCardProps) {
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
