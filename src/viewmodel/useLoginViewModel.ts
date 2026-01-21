@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authService } from "../model/services/AuthService";
+import { router } from "expo-router";
 
 export type LoginState = {
   loading: boolean;
@@ -12,6 +13,8 @@ export type LoginActions = {
   logout: () => Promise<boolean>;
   clearError: () => string | null;
   checkAuthStatus: () => Promise<boolean>;
+
+  loginAndNavigate: (email: string, password: string) => Promise<void>;
 };
 
 export const useLoginViewModel = () => {
@@ -38,6 +41,14 @@ export const useLoginViewModel = () => {
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loginAndNavigate = async (email: string, password: string): Promise<void> => {
+    const success = await login(email, password);
+
+    if (success) {
+      router.replace("/DashboardScreen");
     }
   };
 
@@ -76,6 +87,7 @@ export const useLoginViewModel = () => {
     actions: {
       login,
       logout,
+      loginAndNavigate,
       clearError,
       checkAuthStatus,
     },
