@@ -64,12 +64,13 @@ export default function DashboardView() {
       )}
 
       {/* Status */}
-      <Text style={styles.status}>
-        Status da Jornada {isWorking ? "🟢" : "🔴"}
+      <Text style={styles.status} testID="journey-status">
+        Status da Jornada {isWorking ? "🟢 Ativa" : "🔴 Inativa"}
       </Text>
 
       {/* Botão Iniciar / Encerrar */}
       <Button
+        testID="journey-toggle-button"
         mode="contained"
         style={styles.mainButton}
         contentStyle={styles.mainButtonContent}
@@ -124,6 +125,7 @@ export default function DashboardView() {
           style={styles.iconBox}
         />
         <Text
+          testID="list-leads-button"
           style={styles.actionText}
           onPress={() => router.push("/ListLeadsScreen")}
         >

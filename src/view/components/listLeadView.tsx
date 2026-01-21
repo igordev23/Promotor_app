@@ -83,6 +83,7 @@ export default function ListarLeadsView() {
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#777" />
           <TextInput
+            testID="search-leads-input"
             style={styles.input}
             placeholder="Procure por Leads Registrados"
             value={busca}
@@ -108,7 +109,7 @@ export default function ListarLeadsView() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 16 }}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <View style={styles.card} testID={`lead-item-${item.id}`}>
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
 

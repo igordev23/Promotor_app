@@ -46,6 +46,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
         <TextInput
+          testID="email-input"
           label="Digite seu e-mail"
           placeholder="exemplo@gmail.com"
           value={email}
@@ -56,6 +57,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>Senha</Text>
         <TextInput
+          testID="password-input"
           label="Digite sua senha"
           placeholder="********"
           value={password}
@@ -80,6 +82,7 @@ export default function LoginView() {
         )}
 
         <Button
+          testID="login-button"
           mode="contained"
           onPress={handleLogin}
           loading={state.loading}

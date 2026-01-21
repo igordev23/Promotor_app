@@ -21,7 +21,9 @@
           - generic: Digite sua senha
     - textbox "********" [ref=e18]: "12345678"
   - generic [ref=e19] [cursor=pointer]: Esqueceu a sua senha?
-  - generic [ref=e20]: Não foi possível autenticar. Tente novamente.
-  - button "Entrar" [ref=e22] [cursor=pointer]:
-    - generic [ref=e24]: Entrar
+  - generic [ref=e20]:
+    - button "Entrar" [disabled]:
+      - generic [ref=e21]:
+        - progressbar [ref=e22]
+        - generic [ref=e36]: Entrar
 ```
