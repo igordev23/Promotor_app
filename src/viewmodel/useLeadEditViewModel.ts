@@ -2,22 +2,38 @@
 import { useCallback, useState, useMemo } from "react";
 import { leadUseCase } from "../useCases/LeadUseCase";
 import { Lead } from "../model/entities/Lead";
+import { 
+  formatCPF, 
+  formatPhone, 
+  onlyDigits, 
+  isValidCPF, 
+  isValidPhone 
+} from "../utils/formatters";
 
 // Tipos
 export interface LeadEditState {
   loading: boolean;
   error: string | null;
   success: boolean;
+  fieldErrors: FieldErrors;
+}
+
+export interface FieldErrors {
+  nome?: string;
+  cpf?: string;
+  telefone?: string;
 }
 
 export interface LeadEditActions {
   editLead: (data: LeadEditData) => Promise<void>;
+  updateField: (field: keyof LeadEditData, value: string) => void;
   clearError: () => void;
   clearSuccess: () => void;
+  clearFieldErrors: () => void;
   resetState: () => void;
 }
 
-export interface LeadEditData extends Partial<Lead> {
+export interface LeadEditData {
   id: string;
   nome?: string;
   cpf?: string;
@@ -29,37 +45,47 @@ export interface LeadEditViewModel {
   actions: LeadEditActions;
 }
 
-// Interface para erros
-interface LeadEditError extends Error {
-  code?: string;
-  field?: keyof LeadEditData;
-}
-
 // Constantes
 const ERROR_MESSAGES = {
   DEFAULT: "Erro ao atualizar lead",
   VALIDATION: "Dados inválidos para atualização",
   NETWORK: "Erro de conexão. Verifique sua internet.",
+  ID_REQUIRED: "ID do lead é obrigatório",
+  NOME_REQUIRED: "Nome é obrigatório",
+  CPF_INVALID: "CPF inválido (deve conter 11 dígitos)",
+  TELEFONE_INVALID: "Telefone inválido (deve conter 10 ou 11 dígitos)",
 } as const;
-
-const SUCCESS_MESSAGE = "Lead atualizado com sucesso!";
 
 // Estado inicial
 const initialState: LeadEditState = {
   loading: false,
   error: null,
   success: false,
+  fieldErrors: {},
 };
 
 // Hook principal
 export const useLeadEditViewModel = (): LeadEditViewModel => {
   const [state, setState] = useState<LeadEditState>(initialState);
+  const [formData, setFormData] = useState<Omit<LeadEditData, 'id'>>({
+    nome: "",
+    cpf: "",
+    telefone: "",
+  });
 
-  // Limpa erros
+  // Limpa erros gerais
   const clearError = useCallback((): void => {
     setState(prev => ({
       ...prev,
       error: null,
+    }));
+  }, []);
+
+  // Limpa erros de campo
+  const clearFieldErrors = useCallback((): void => {
+    setState(prev => ({
+      ...prev,
+      fieldErrors: {},
     }));
   }, []);
 
@@ -74,30 +100,79 @@ export const useLeadEditViewModel = (): LeadEditViewModel => {
   // Reseta todo o estado
   const resetState = useCallback((): void => {
     setState(initialState);
+    setFormData({
+      nome: "",
+      cpf: "",
+      telefone: "",
+    });
+  }, []);
+
+  // Atualiza campo do formulário com formatação automática
+  const updateField = useCallback((field: keyof LeadEditData, value: string): void => {
+    setFormData(prev => {
+      let formattedValue = value;
+      
+      // Aplica formatação automática
+      if (field === 'cpf') {
+        formattedValue = formatCPF(value);
+      } else if (field === 'telefone') {
+        formattedValue = formatPhone(value);
+      }
+      
+      return {
+        ...prev,
+        [field]: formattedValue,
+      };
+    });
+
+    // Limpa erro específico do campo
+    setState(prev => ({
+      ...prev,
+      fieldErrors: {
+        ...prev.fieldErrors,
+        [field]: undefined,
+      },
+    }));
+  }, []);
+
+  // Inicializa dados do formulário
+  const initializeFormData = useCallback((data: Partial<LeadEditData>): void => {
+    const initialData: Omit<LeadEditData, 'id'> = {
+      nome: data.nome ? String(data.nome) : "",
+      cpf: data.cpf ? formatCPF(String(data.cpf)) : "",
+      telefone: data.telefone ? formatPhone(String(data.telefone)) : "",
+    };
+    
+    setFormData(initialData);
   }, []);
 
   // Valida dados antes de enviar
-  const validateLeadData = useCallback((data: LeadEditData): boolean => {
+  const validateLeadData = useCallback((data: LeadEditData): FieldErrors => {
+    const errors: FieldErrors = {};
+
     if (!data.id || data.id.trim() === "") {
-      throw new Error("ID do lead é obrigatório");
+      throw new Error(ERROR_MESSAGES.ID_REQUIRED);
     }
 
     if (data.nome !== undefined && data.nome.trim() === "") {
-      throw new Error("Nome não pode ser vazio");
+      errors.nome = ERROR_MESSAGES.NOME_REQUIRED;
     }
 
-    if (data.cpf !== undefined && !/^\d{11}$/.test(data.cpf.replace(/\D/g, ""))) {
-      throw new Error("CPF inválido");
-    }
-
-    if (data.telefone !== undefined) {
-      const digits = data.telefone.replace(/\D/g, "");
-      if (digits.length < 10 || digits.length > 11) {
-        throw new Error("Telefone inválido");
+    if (data.cpf !== undefined && data.cpf !== "") {
+      const cpfDigits = onlyDigits(data.cpf);
+      if (!isValidCPF(cpfDigits)) {
+        errors.cpf = ERROR_MESSAGES.CPF_INVALID;
       }
     }
 
-    return true;
+    if (data.telefone !== undefined && data.telefone !== "") {
+      const phoneDigits = onlyDigits(data.telefone);
+      if (!isValidPhone(phoneDigits)) {
+        errors.telefone = ERROR_MESSAGES.TELEFONE_INVALID;
+      }
+    }
+
+    return errors;
   }, []);
 
   // Atualiza lead
@@ -107,18 +182,28 @@ export const useLeadEditViewModel = (): LeadEditViewModel => {
       loading: true,
       error: null,
       success: false,
+      fieldErrors: {},
     }));
 
     try {
       // Validação
-      validateLeadData(data);
+      const fieldErrors = validateLeadData(data);
+      
+      if (Object.keys(fieldErrors).length > 0) {
+        setState(prev => ({
+          ...prev,
+          fieldErrors,
+          loading: false,
+        }));
+        return;
+      }
 
-      // Prepara dados para envio
+      // Prepara dados para envio (remove formatação)
       const leadData: Partial<Lead> = {
         ...(data.nome !== undefined && { nome: data.nome.trim() }),
-        ...(data.cpf !== undefined && { cpf: data.cpf.replace(/\D/g, "") }),
-        ...(data.telefone !== undefined && {
-          telefone: data.telefone.replace(/\D/g, "")
+        ...(data.cpf !== undefined && { cpf: onlyDigits(data.cpf) }),
+        ...(data.telefone !== undefined && { 
+          telefone: onlyDigits(data.telefone) 
         }),
       };
 
@@ -139,56 +224,98 @@ export const useLeadEditViewModel = (): LeadEditViewModel => {
         : leadUseCase.parseError?.(error, ERROR_MESSAGES.DEFAULT) || ERROR_MESSAGES.DEFAULT;
 
       const isNetworkError = errorMessage.toLowerCase().includes("network") ||
-        errorMessage.toLowerCase().includes("conexão");
+        errorMessage.toLowerCase().includes("conexão") ||
+        errorMessage.toLowerCase().includes("fetch");
+
+      // Tenta identificar erros de campo específicos
+      const fieldErrors: FieldErrors = {};
+      const errorLower = errorMessage.toLowerCase();
+      
+      if (errorLower.includes("nome")) {
+        fieldErrors.nome = errorMessage;
+      } else if (errorLower.includes("cpf")) {
+        fieldErrors.cpf = errorMessage;
+      } else if (errorLower.includes("telefone") || errorLower.includes("phone")) {
+        fieldErrors.telefone = errorMessage;
+      }
 
       setState(prev => ({
         ...prev,
         loading: false,
-        error: isNetworkError ? ERROR_MESSAGES.NETWORK : errorMessage,
+        error: Object.keys(fieldErrors).length === 0 
+          ? (isNetworkError ? ERROR_MESSAGES.NETWORK : errorMessage)
+          : null,
+        fieldErrors,
         success: false,
       }));
 
-      // Re-lança o erro para tratamento no componente
-      throw error;
+      // Re-lança o erro apenas se não for erro de validação de campo
+      if (Object.keys(fieldErrors).length === 0) {
+        throw error;
+      }
     }
   }, [validateLeadData]);
 
   // Memoiza as ações
   const actions: LeadEditActions = useMemo(() => ({
     editLead,
+    updateField,
     clearError,
     clearSuccess,
+    clearFieldErrors,
     resetState,
-  }), [editLead, clearError, clearSuccess, resetState]);
+  }), [editLead, updateField, clearError, clearSuccess, clearFieldErrors, resetState]);
 
   return {
-    state,
+    state: {
+      ...state,
+    },
     actions,
   };
 };
 
-// Hook auxiliar para log de erros
-export const useLeadEditErrorHandler = () => {
-  const handleError = useCallback((error: unknown, field?: keyof LeadEditData): string => {
-    if (error instanceof Error) {
-      console.error(`Erro ao editar lead${field ? ` no campo ${field}` : ""}:`, error);
+// Hook auxiliar para gerenciar formulário de edição
+export const useLeadEditForm = (initialData?: Partial<LeadEditData>) => {
+  const { state, actions } = useLeadEditViewModel();
+  const [localFormData, setLocalFormData] = useState<Omit<LeadEditData, 'id'>>({
+    nome: initialData?.nome || "",
+    cpf: initialData?.cpf || "",
+    telefone: initialData?.telefone || "",
+  });
 
-      // Mapeia erros comuns para mensagens amigáveis
-      const errorMessage = error.message.toLowerCase();
-
-      if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-        return ERROR_MESSAGES.NETWORK;
-      }
-
-      if (errorMessage.includes("validation") || errorMessage.includes("invalid")) {
-        return ERROR_MESSAGES.VALIDATION;
-      }
-
-      return error.message;
-    }
-
-    return ERROR_MESSAGES.DEFAULT;
+  // Inicializa com formatação
+  const initializeWithFormatting = useCallback((data: Partial<LeadEditData>): void => {
+    setLocalFormData({
+      nome: data.nome || "",
+      cpf: data.cpf ? formatCPF(String(data.cpf)) : "",
+      telefone: data.telefone ? formatPhone(String(data.telefone)) : "",
+    });
   }, []);
 
-  return { handleError };
+  // Handler para atualizar campo
+  const handleFieldChange = useCallback((field: keyof LeadEditData, value: string): void => {
+    let formattedValue = value;
+    
+    if (field === 'cpf') {
+      formattedValue = formatCPF(value);
+    } else if (field === 'telefone') {
+      formattedValue = formatPhone(value);
+    }
+    
+    setLocalFormData(prev => ({
+      ...prev,
+      [field]: formattedValue,
+    }));
+    
+    // Chama o updateField do view model
+    actions.updateField(field, formattedValue);
+  }, [actions]);
+
+  return {
+    formData: localFormData,
+    handleFieldChange,
+    initializeWithFormatting,
+    ...state,
+    ...actions,
+  };
 };

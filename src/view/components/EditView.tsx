@@ -1,11 +1,10 @@
 // src/view/components/EditView.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
   TextStyle,
   ViewStyle,
-  Alert
 } from "react-native";
 import {
   Text,
@@ -15,7 +14,7 @@ import {
 } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useLeadEditViewModel } from "@/src/viewmodel/useLeadEditViewModel";
+import { useLeadEditForm } from "@/src/viewmodel/useLeadEditViewModel";
 import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
 
 // Tipos para as propriedades do componente
@@ -29,21 +28,6 @@ interface RouteParams {
   telefone?: string;
 }
 
-// Tipo para erros de campo
-interface FieldErrors {
-  nome?: string;
-  cpf?: string;
-  telefone?: string;
-}
-
-// Tipo para os dados do formulário
-interface LeadFormData {
-  id: string;
-  nome: string;
-  cpf: string;
-  telefone: string;
-}
-
 // Tipo para os estilos
 interface EditViewStyles {
   container: ViewStyle;
@@ -55,175 +39,82 @@ interface EditViewStyles {
   errorText: TextStyle;
   loadingContainer: ViewStyle;
   formContainer: ViewStyle;
+  errorContainer: ViewStyle;
 }
 
-// Constantes para validação
+// Constantes
 const VALIDATION_MESSAGES = {
-  NOME_REQUIRED: "Nome é obrigatório",
-  CPF_INVALID: "CPF inválido",
-  TELEFONE_INVALID: "Telefone inválido",
   UPDATE_SUCCESS: "Lead atualizado com sucesso!",
-  UPDATE_ERROR: "Erro ao atualizar lead. Verifique os dados.",
+  UPDATE_ERROR: "Erro ao atualizar lead.",
 } as const;
 
-// Funções utilitárias para formatação
-const formatCPF = (value: string): string => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-};
-
-const formatPhone = (value: string): string => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/^(\d{2})(\d)/, "($1) $2")
-    .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
-};
-
-// Função para extrair apenas dígitos
-const extractDigits = (value: string): string => {
-  return value.replace(/\D/g, "");
-};
-
 export default function EditView(_props: EditViewProps): React.ReactElement {
-  const { state, actions } = useLeadEditViewModel();
   const router = useRouter();
   const params = useLocalSearchParams() as RouteParams;
-
-  const [formData, setFormData] = useState<Omit<LeadFormData, "id">>({
-    nome: "",
-    cpf: "",
-    telefone: "",
-  });
-
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [successVisible, setSuccessVisible] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  // Data e hora atual formatada
-  const currentDateTime = useMemo(
-    () => new Date().toLocaleString("pt-BR"),
-    []
-  );
+  
+  const {
+    formData,
+    handleFieldChange,
+    initializeWithFormatting,
+    loading,
+    error,
+    success,
+    fieldErrors,
+    editLead,
+    clearError,
+    clearFieldErrors,
+    clearSuccess,
+  } = useLeadEditForm();
 
   // Inicializa os dados do formulário com os parâmetros da rota
   useEffect(() => {
-    const initializeFormData = () => {
-      const updatedFormData = { ...formData };
-
-      if (params.nome) updatedFormData.nome = String(params.nome);
-      if (params.cpf) updatedFormData.cpf = formatCPF(String(params.cpf));
-      if (params.telefone) updatedFormData.telefone = formatPhone(String(params.telefone));
-
-      setFormData(updatedFormData);
-    };
-
-    initializeFormData();
-  }, []);
-
-  // Validação do formulário
-  const validateForm = useCallback((): boolean => {
-    const errors: FieldErrors = {};
-    let isValid = true;
-
-    // Validação do nome
-    if (!formData.nome.trim()) {
-      errors.nome = VALIDATION_MESSAGES.NOME_REQUIRED;
-      isValid = false;
+    if (params.id) {
+      initializeWithFormatting({
+        id: params.id,
+        nome: params.nome,
+        cpf: params.cpf,
+        telefone: params.telefone,
+      });
     }
-
-    // Validação do CPF
-    const cpfDigits = extractDigits(formData.cpf);
-    if (cpfDigits.length !== 11) {
-      errors.cpf = VALIDATION_MESSAGES.CPF_INVALID;
-      isValid = false;
-    }
-
-    // Validação do telefone
-    const phoneDigits = extractDigits(formData.telefone);
-    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      errors.telefone = VALIDATION_MESSAGES.TELEFONE_INVALID;
-      isValid = false;
-    }
-
-    setFieldErrors(errors);
-    return isValid;
-  }, [formData]);
+  }, [params.id, params.nome, params.cpf, params.telefone, initializeWithFormatting]);
 
   // Handler para salvar lead
   const handleSave = useCallback(async (): Promise<void> => {
-    if (!validateForm()) {
-      return;
-    }
-
     if (!params.id) {
-      Alert.alert("Erro", "ID do lead não encontrado");
       return;
     }
 
-    setIsSubmitting(true);
-    setFieldErrors({});
+    clearError();
+    clearFieldErrors();
 
     try {
-      const leadData: LeadFormData = {
+      await editLead({
         id: params.id,
-        nome: formData.nome.trim(),
-        cpf: extractDigits(formData.cpf),
-        telefone: extractDigits(formData.telefone),
-      };
+        nome: formData.nome,
+        cpf: formData.cpf,
+        telefone: formData.telefone,
+      });
 
-      await actions.editLead(leadData);
-
-      // Mostra feedback de sucesso
-      setSuccessVisible(true);
-
+      // Sucesso é gerenciado pelo view model
       // Navega após 1.5 segundos
       setTimeout(() => {
         router.replace("/ListLeadsScreen");
       }, 1500);
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error
-        ? error.message.toLowerCase()
-        : "Erro desconhecido";
-
-      const errors: FieldErrors = {};
-
-      if (errorMessage.includes("nome")) {
-        errors.nome = errorMessage;
-      }
-      if (errorMessage.includes("cpf")) {
-        errors.cpf = errorMessage;
-      }
-      if (errorMessage.includes("telefone")) {
-        errors.telefone = errorMessage;
-      }
-
-      setFieldErrors(errors);
-
-      Alert.alert("Erro", VALIDATION_MESSAGES.UPDATE_ERROR);
-    } finally {
-      setIsSubmitting(false);
+      // Erro já é tratado pelo view model
+      console.error("Erro ao salvar lead:", error);
     }
-  }, [formData, params.id, validateForm, actions.editLead, router]);
-
-  // Handlers para atualizar campos
-  const handleNomeChange = useCallback((text: string): void => {
-    setFormData(prev => ({ ...prev, nome: text }));
-    setFieldErrors(prev => ({ ...prev, nome: undefined }));
-  }, []);
-
-  const handleCpfChange = useCallback((text: string): void => {
-    setFormData(prev => ({ ...prev, cpf: formatCPF(text) }));
-    setFieldErrors(prev => ({ ...prev, cpf: undefined }));
-  }, []);
-
-  const handleTelefoneChange = useCallback((text: string): void => {
-    setFormData(prev => ({ ...prev, telefone: formatPhone(text) }));
-    setFieldErrors(prev => ({ ...prev, telefone: undefined }));
-  }, []);
+  }, [
+    params.id,
+    formData.nome,
+    formData.cpf,
+    formData.telefone,
+    editLead,
+    router,
+    clearError,
+    clearFieldErrors,
+  ]);
 
   // Handler para voltar
   const handleGoBack = useCallback((): void => {
@@ -234,8 +125,7 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
   const renderFieldWithError = (
     label: string,
     value: string,
-    onChange: (text: string) => void,
-    error?: string,
+    field: keyof typeof fieldErrors,
     keyboardType: "default" | "numeric" | "phone-pad" = "default",
     additionalProps: Partial<React.ComponentProps<typeof TextInput>> = {}
   ): React.ReactElement => (
@@ -243,18 +133,22 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
       <TextInput
         label={label}
         value={value}
-        onChangeText={onChange}
+        onChangeText={(text) => handleFieldChange(field, text)}
         mode="outlined"
         keyboardType={keyboardType}
-        error={!!error}
+        error={!!fieldErrors[field]}
         style={styles.input}
-        editable={!isSubmitting}
+        editable={!loading}
+        accessibilityLabel={label}
+        accessibilityRole="text"
         {...additionalProps}
       />
-      {error && (
-        <Text style={styles.errorText} accessibilityRole="alert">
-          {error}
-        </Text>
+      {fieldErrors[field] && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText} accessibilityRole="alert">
+            {fieldErrors[field]}
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -270,9 +164,19 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
           onPress={handleGoBack}
           accessibilityLabel="Voltar para lista de leads"
           accessibilityRole="button"
+          disabled={loading}
         />
         <Text style={styles.headerTitle}>Editar Lead</Text>
       </View>
+
+      {/* Erro geral */}
+      {error && !Object.keys(fieldErrors).length && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText} accessibilityRole="alert">
+            {error}
+          </Text>
+        </View>
+      )}
 
       {/* Formulário */}
       <View style={styles.card}>
@@ -280,32 +184,38 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
         {renderFieldWithError(
           "Nome completo",
           formData.nome,
-          handleNomeChange,
-          fieldErrors.nome,
+          "nome",
           "default",
-          { autoCapitalize: "words" }
+          { 
+            autoCapitalize: "words",
+            autoCorrect: false,
+          }
         )}
 
         {/* Campo Telefone */}
         {renderFieldWithError(
           "Telefone",
           formData.telefone,
-          handleTelefoneChange,
-          fieldErrors.telefone,
-          "phone-pad"
+          "telefone",
+          "phone-pad",
+          {
+            maxLength: 15, // (00) 00000-0000
+          }
         )}
 
         {/* Campo CPF */}
         {renderFieldWithError(
           "CPF",
           formData.cpf,
-          handleCpfChange,
-          fieldErrors.cpf,
-          "numeric"
+          "cpf",
+          "numeric",
+          {
+            maxLength: 14, // 000.000.000-00
+          }
         )}
 
         {/* Botão Salvar ou Loading */}
-        {isSubmitting || state.loading ? (
+        {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator
               size="large"
@@ -318,7 +228,7 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
             mode="contained"
             onPress={handleSave}
             style={styles.saveBtn}
-            disabled={isSubmitting}
+            disabled={loading}
             accessibilityLabel="Salvar alterações do lead"
             accessibilityRole="button"
           >
@@ -329,9 +239,14 @@ export default function EditView(_props: EditViewProps): React.ReactElement {
 
       {/* Feedback de Sucesso */}
       <SuccessFeedbackCard
-        visible={successVisible}
-        onDismiss={() => setSuccessVisible(false)}
+        visible={success}
+        onDismiss={clearSuccess}
         message={VALIDATION_MESSAGES.UPDATE_SUCCESS}
+        duration={1500}
+        onDismissComplete={() => {
+          // Navega automaticamente após fechar o feedback
+          router.replace("/ListLeadsScreen");
+        }}
       />
     </View>
   );
@@ -348,7 +263,7 @@ const styles = StyleSheet.create<EditViewStyles>({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   headerTitle: {
     fontSize: 24,
@@ -370,7 +285,7 @@ const styles = StyleSheet.create<EditViewStyles>({
   },
   input: {
     backgroundColor: "#FAFAFA",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   saveBtn: {
     marginTop: 24,
@@ -381,13 +296,17 @@ const styles = StyleSheet.create<EditViewStyles>({
   errorText: {
     color: "#D32F2F",
     fontSize: 12,
-    marginTop: -4,
-    marginBottom: 16,
     fontWeight: "500",
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  errorContainer: {
+    marginBottom: 8,
   },
   loadingContainer: {
     marginTop: 24,
     paddingVertical: 16,
+    alignItems: "center",
   },
   formContainer: {
     marginBottom: 8,
