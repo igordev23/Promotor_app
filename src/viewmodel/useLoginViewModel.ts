@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { authService } from "../model/services/AuthService";
-import { router } from "expo-router";
+import { AuthContext } from "../contexts/AuthContextBase";
 
 export type LoginState = {
   loading: boolean;
@@ -18,31 +18,35 @@ export type LoginActions = {
 };
 
 export const useLoginViewModel = () => {
+  const ctx = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+ const login = async (_email: string, _password: string): Promise<boolean> => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      const success = await authService.login(email, password);
-      if (success) {
-        setIsAuthenticated(true);
-        return true;
-      } else {
-        setError("Credenciais inválidas");
-        return false;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro no login";
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    // 🔴 CREDENCIAIS FIXAS PARA FASE DE TESTE
+    const testEmail = "promotor2@test.com";
+    const testPassword = "12345678";
+
+    await authService.login(testEmail, testPassword);
+
+    setIsAuthenticated(true);
+    return true;
+
+  } catch (err) {
+    setError("Erro inesperado ao realizar login");
+    return false;
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const loginAndNavigate = async (email: string, password: string): Promise<void> => {
     const success = await login(email, password);

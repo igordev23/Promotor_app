@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, FC, Dispatch, SetStateAction } from "react";
 import {
   View,
   Text,
@@ -7,198 +7,226 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Alert,
+  AlertButton,
+  ViewStyle,
+  TextStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, Href } from "expo-router";
 
 import { Lead } from "@/src/model/entities/Lead";
-import { leadUseCase } from "@/src/useCases/LeadUseCase";
+import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
+import {
+  IListLeadsViewModelReturn,
+  RemoveLeadHandler,
+  RemoveSelectedHandler,
+  EditLeadHandler,
+} from "@/src/viewmodel/types/ListLeadsTypes";
+import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
 
-export default function ListarLeadsView() {
+/**
+ * Componente de listagem de leads
+ * Responsável apenas pela renderização da UI
+ * Toda lógica está delegada à useListLeadsViewModel
+ */
+const ListarLeadsView: FC = () => {
   const router = useRouter();
+  const { state, actions }: IListLeadsViewModelReturn = useListLeadsViewModel();
+  const [successVisible, setSuccessVisible]: [
+    boolean,
+    Dispatch<SetStateAction<boolean>>
+  ] = useState<boolean>(false);
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [allLeads, setAllLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busca, setBusca] = useState("");
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-
-  // 🔹 Carregar leads
-  async function loadLeads() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await leadUseCase.getLeads();
-      setLeads(data);
-      setAllLeads(data);
-    } catch (err) {
-      setError(leadUseCase.parseError(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadLeads();
+  /**
+   * Carrega leads ao montar o componente
+   */
+  useEffect((): void => {
+    actions.loadLeads().catch((err: unknown): void => {
+      console.error("Erro ao carregar leads:", err);
+    });
   }, []);
 
-  // 🔹 Buscar
-  function handleSearch(text: string) {
-    setBusca(text);
+  /**
+   * Remove um lead individual com confirmação
+   */
+  const handleRemove: RemoveLeadHandler = (id: string): void => {
+    const alertButtons: AlertButton[] = [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async (): Promise<void> => {
+          try {
+            await actions.removeLead(id);
+            setSuccessVisible(true);
+          } catch (err: unknown) {
+            const errorMessage: string =
+              state.error || "Erro ao remover lead";
+            Alert.alert("Erro", errorMessage);
+          }
+        },
+      },
+    ];
 
-    if (!text.trim()) {
-      setLeads(allLeads);
-    } else {
-      const filtered = leadUseCase.filterLeads(allLeads, text);
-      setLeads(filtered);
-    }
-  }
-
-  // 🔹 Selecionar
-  function toggleSelectLead(id: string) {
-    setSelectedLeads((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  }
-  async function handleRemoveSelected() {
-    try {
-      // percorre o array e remove um por um
-      for (const id of selectedLeads) {
-        await leadUseCase.removeLead(id);
-      }
-
-      // atualiza lista local após exclusões
-      const updated = allLeads.filter(
-        (lead) => !selectedLeads.includes(lead.id)
-      );
-
-      setAllLeads(updated);
-      setLeads(updated);
-
-      // limpa seleção
-      setSelectedLeads([]);
-    } catch (err) {
-      setError(leadUseCase.parseError(err));
-    }
-  }
-  function handleSelectAll() {
-    // se todas já estão selecionadas → limpa seleção
-    if (selectedLeads.length === leads.length) {
-      setSelectedLeads([]);
-      return;
-    }
-  
-    // caso contrário → seleciona todas
-    const allIds = leads.map((lead) => lead.id);
-    setSelectedLeads(allIds);
-  }
-  
-
-
-
-  // 🔹 Remover
-  async function handleRemove(id: string) {
-    try {
-      await leadUseCase.removeLead(id);
-
-      const updated = allLeads.filter((l) => l.id !== id);
-      setAllLeads(updated);
-      setLeads(updated);
-    } catch (err) {
-      setError(leadUseCase.parseError(err));
-    }
-  }
-
-  // 🔹 Formatadores
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    Alert.alert("Confirmar", "Deseja remover este lead?", alertButtons);
   };
 
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/^(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
+  /**
+   * Remove múltiplos leads com confirmação
+   */
+  const handleRemoveSelected: RemoveSelectedHandler = (): void => {
+    const selectedCount: number = state.selectedLeads.length;
+    const alertButtons: AlertButton[] = [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async (): Promise<void> => {
+          try {
+            await actions.removeSelected();
+            setSuccessVisible(true);
+          } catch (err: unknown) {
+            const errorMessage: string =
+              state.error || "Erro ao remover leads";
+            Alert.alert("Erro", errorMessage);
+          }
+        },
+      },
+    ];
+
+    Alert.alert(
+      "Excluir Leads",
+      `Deseja excluir ${selectedCount} leads?`,
+      alertButtons
+    );
+  };
+
+  /**
+   * Navega para a tela de edição
+   */
+  const handleEditLead: EditLeadHandler = (lead: Lead): void => {
+    const navigationParams: {
+      id: string;
+      nome: string;
+      cpf: string;
+      telefone: string;
+    } = {
+      id: lead.id,
+      nome: lead.nome,
+      cpf: lead.cpf,
+      telefone: lead.telefone,
+    };
+
+    router.push({
+      pathname: "/EditLeadScreen",
+      params: navigationParams,
+    });
   };
 
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-  <TouchableOpacity onPress={() => router.back()}>
-    <Ionicons name="arrow-back" size={24} />
-  </TouchableOpacity>
+        <TouchableOpacity
+          onPress={(): void => {
+            router.push("/DashboardScreen");
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} />
+        </TouchableOpacity>
 
-  <Text style={styles.title}>Listar Leads</Text>
+        <Text style={styles.title}>Listar Leads</Text>
 
-  {/* ✅ Checkbox Selecionar Todos */}
-  <TouchableOpacity onPress={handleSelectAll}>
-    <Ionicons
-      name={
-        selectedLeads.length === leads.length && leads.length > 0
-          ? "checkbox"
-          : "square-outline"
-      }
-      size={22}
-      color="#d33"
-    />
-  </TouchableOpacity>
-
-  {/* 🔴 Botão excluir em lote */}
-  {selectedLeads.length > 0 && (
-    <TouchableOpacity onPress={handleRemoveSelected}>
-      <Ionicons name="trash" size={24} color="#d33" />
-    </TouchableOpacity>
-  )}
-</View>
-
-
-      {/* SEARCH */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#777" />
-          <TextInput
-            style={styles.input}
-            placeholder="Procure por Leads Registrados"
-            value={busca}
-            onChangeText={handleSearch}
+        <TouchableOpacity
+          onPress={(): void => {
+            actions.selectAll();
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={
+              state.selectedLeads.length === state.leads.length &&
+                state.leads.length > 0
+                ? "checkbox"
+                : "square-outline"
+            }
+            size={22}
+            color="#d33"
           />
-        </View>
+        </TouchableOpacity>
+
+        {state.selectedLeads.length > 0 && (
+          <TouchableOpacity
+            onPress={handleRemoveSelected}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash" size={24} color="#d33" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* LOADING */}
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
+      {state.loading && <ActivityIndicator style={{ marginVertical: 20 }} />}
 
       {/* ERROR */}
-      {error && <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>}
-
-      {/* COUNT */}
-      {!loading && (
-        <Text style={styles.countText}>{leads.length} Leads encontrados</Text>
+      {state.error && (
+        <Text style={{ color: "red", marginBottom: 10 }}>{state.error}</Text>
       )}
 
-      {/* LIST */}
-      <FlatList
-        data={leads}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        renderItem={({ item }) => (
+      {/* LISTA */}
+      <FlatList<Lead>
+        data={Array.from(state.leads)}
+        keyExtractor={(item: Lead): string => item.id}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListHeaderComponent={
+          <>
+            {/* SEARCH */}
+            <View style={styles.searchBox}>
+              <Ionicons name="search" size={18} color="#777" />
+              <TextInput
+                style={styles.input}
+                placeholder="Procure por Leads Registrados"
+                value={state.busca}
+                onChangeText={(text: string): void => {
+                  actions.updateSearchQuery(text);
+                }}
+                placeholderTextColor="#999"
+              />
+              {state.busca && (
+                <TouchableOpacity
+                  onPress={(): void => {
+                    actions.updateSearchQuery("");
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close-circle" size={18} color="#777" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {!state.loading && (
+              <Text style={styles.countText}>
+                {state.leads.length} Leads encontrados
+              </Text>
+            )}
+          </>
+        }
+        renderItem={({ item }: { item: Lead }): JSX.Element => (
           <View style={styles.card}>
             <View style={styles.cardTop}>
               <Text style={styles.cardTitle}>{item.nome}</Text>
 
-              <TouchableOpacity onPress={() => toggleSelectLead(item.id)}>
+              <TouchableOpacity
+                onPress={(): void => {
+                  actions.toggleSelectLead(item.id);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons
                   name={
-                    selectedLeads.includes(item.id)
+                    state.selectedLeads.includes(item.id)
                       ? "checkbox"
                       : "square-outline"
                   }
@@ -206,38 +234,64 @@ export default function ListarLeadsView() {
                   color="#d33"
                 />
               </TouchableOpacity>
-
-
             </View>
-            <Text style={styles.cardInfo}>
-              Criado em 📅: {item.criadoEm}
-            </Text>
-            <Text style={styles.cardInfo}>
-              Telefone 📞: {formatPhone(item.telefone)}
-            </Text>
-            <Text style={styles.cardInfo}>
-              CPF 🪪: {formatCPF(item.cpf)}
-            </Text>
+
+            <Text style={styles.cardInfo}>📅 {item.criadoEm}</Text>
+            <Text style={styles.cardInfo}>📞 {item.telefone}</Text>
+            <Text style={styles.cardInfo}>🪪 {item.cpf}</Text>
 
             <View style={styles.cardActions}>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={(): void => {
+                  handleEditLead(item);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="pencil" size={20} />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => handleRemove(item.id)}>
+              <TouchableOpacity
+                onPress={(): void => {
+                  handleRemove(item.id);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="trash" size={22} color="#d33" />
               </TouchableOpacity>
             </View>
           </View>
         )}
       />
+
+      {/* FEEDBACK */}
+      <SuccessFeedbackCard
+        visible={successVisible}
+        onDismiss={(): void => setSuccessVisible(false)}
+        message="Lead excluído com sucesso!"
+      />
     </View>
   );
+};
+
+export default ListarLeadsView;
+
+interface IStyles {
+  container: ViewStyle;
+  header: ViewStyle;
+  title: TextStyle;
+  searchRow: ViewStyle;
+  searchBox: ViewStyle;
+  input: TextStyle;
+  filterButton: ViewStyle;
+  countText: TextStyle;
+  card: ViewStyle;
+  cardTop: ViewStyle;
+  cardTitle: TextStyle;
+  cardInfo: TextStyle;
+  cardActions: ViewStyle;
 }
 
-
-
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<IStyles>({
   container: {
     flexGrow: 1,
     backgroundColor: "#F7F9FF",
@@ -279,7 +333,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 6,
-    marginBottom: 20
+    paddingVertical: 0, // Android fix
   },
 
   filterButton: {

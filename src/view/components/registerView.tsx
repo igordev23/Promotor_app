@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
 
 import { useLeadRegisterViewModel } from "@/src/viewmodel/useLeadRegisterViewModel";
 
@@ -10,99 +11,70 @@ export default function RegisterView() {
   const { state, actions } = useLeadRegisterViewModel();
   const router = useRouter();
 
-  // 🔹 Estados controlados pela View
-  const [nome, setNome] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [telefone, setTelefone] = useState("");
-
-  // 🔹 Apenas visual
-  const dateTime = useMemo(
-    () => new Date().toLocaleString("pt-BR"),
-    []
-  );
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-
-    return digits
-      .replace(/^(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
-  };
-
-  const handleSave = async () => {
-    await actions.registerLead({
-      nome,
-      cpf: cpf.replace(/\D/g, ""),            //remover formatação antes de enviar
-      telefone: telefone.replace(/\D/g, "")   //remover formatação antes de enviar
-    });
-
-    setNome("");
-    setCpf("");
-    setTelefone("");
-  };
-
+  const dateTime = useMemo(() => new Date().toLocaleString("pt-BR"), []);
 
   return (
     <View style={styles.container}>
-
-      {/* Top Bar */}
+      {/* Header */}
       <View style={styles.header}>
         <MaterialIcons
           name="arrow-back"
           size={26}
-          color="#1B1B1F"
-          onPress={() => router.back()}
+          onPress={() => router.replace("/DashboardScreen")}
         />
-
-        <Text style={styles.headerTitle}>
-          Registrar Leads
-        </Text>
+        <Text style={styles.headerTitle}>Registrar Leads</Text>
       </View>
 
-      {/* Card */}
       <View style={styles.card}>
-
         <Button
           icon="account-plus"
           mode="contained"
           style={styles.newLeadBtn}
+          onPress={() => {}}
         >
           Novo Lead
         </Button>
 
+        {/* NOME */}
         <TextInput
           label="Nome completo"
-          value={nome}
-          onChangeText={setNome}
+          value={state.lead.nome}
+          onChangeText={(text) => actions.updateField("nome", text)}
           mode="outlined"
+          error={!!state.fieldErrors.nome}
           style={styles.input}
         />
+        {state.fieldErrors.nome && (
+          <Text style={styles.errorText}>{state.fieldErrors.nome}</Text>
+        )}
 
+        {/* TELEFONE */}
         <TextInput
           label="Digite seu número"
-          value={telefone}
-          onChangeText={(text) => setTelefone(formatPhone(text))}
+          value={state.lead.telefone}
+          onChangeText={(text) => actions.updateField("telefone", text)}
           mode="outlined"
           keyboardType="phone-pad"
+          error={!!state.fieldErrors.telefone}
           style={styles.input}
         />
+        {state.fieldErrors.telefone && (
+          <Text style={styles.errorText}>{state.fieldErrors.telefone}</Text>
+        )}
 
+        {/* CPF */}
         <TextInput
           label="Digite seu CPF"
-          value={cpf}
-          onChangeText={(text) => setCpf(formatCPF(text))}
+          value={state.lead.cpf}
+          onChangeText={(text) => actions.updateField("cpf", text)}
           mode="outlined"
           keyboardType="numeric"
+          error={!!state.fieldErrors.cpf}
           style={styles.input}
         />
+        {state.fieldErrors.cpf && (
+          <Text style={styles.errorText}>{state.fieldErrors.cpf}</Text>
+        )}
 
         <View style={styles.timeBox}>
           <Text style={styles.timeLabel}>Registro salvo em:</Text>
@@ -110,7 +82,6 @@ export default function RegisterView() {
         </View>
 
         <View style={styles.boxButton}>
-
           <Button
             mode="contained"
             onPress={() => router.push("/DashboardScreen")}
@@ -124,21 +95,21 @@ export default function RegisterView() {
           ) : (
             <Button
               mode="contained"
-              onPress={handleSave}
+              onPress={actions.registerLead}
               style={styles.saveBtn}
-              disabled={!nome || !cpf || !telefone}
             >
               Salvar
             </Button>
           )}
-
-          {state.error && (
-            <Text style={{ color: "red", marginTop: 8 }}>
-              {state.error}
-            </Text>
-          )}
         </View>
       </View>
+
+    <SuccessFeedbackCard
+  visible={state.success}
+  onDismiss={actions.clearSuccess}
+  message="Lead registrado com sucesso!"
+/>
+
     </View>
   );
 }
@@ -155,12 +126,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 90
+    marginBottom: 90,
   },
 
   headerTitle: {
     fontSize: 20,
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   card: {
@@ -175,11 +146,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignSelf: "center",
     marginBottom: 32,
-    backgroundColor: "#3F51B5"
+    backgroundColor: "#3F51B5",
   },
 
   input: {
-    marginBottom: 32
+    marginBottom: 32,
   },
 
   timeBox: {
@@ -187,11 +158,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#E2E2E6",
     alignSelf: "center",
-    marginBottom: 24
+    marginBottom: 24,
   },
 
   timeLabel: {
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   saveBtn: {
@@ -205,14 +176,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 20,
     width: "85%",
-    marginBottom: 32
+    marginBottom: 32,
   },
-
 
   cancelarBtn: {
     margin: 10,
     borderRadius: 50,
     width: "50%",
     backgroundColor: "#F44336", // vermelho
-  }
+  },
+  errorText: {
+    color: "#D32F2F",
+    marginTop: -24,
+    marginBottom: 16,
+    fontSize: 13,
+  },
 });
