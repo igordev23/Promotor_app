@@ -1,87 +1,31 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useLeadEditViewModel } from "@/src/viewmodel/useLeadEditViewModel";
-import { Snackbar } from "react-native-paper";
 import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
-type FieldErrors = {
-  nome?: string;
-  cpf?: string;
-  telefone?: string;
-};
 
 export default function EditView() {
-  const { state, actions } = useLeadEditViewModel();
   const router = useRouter();
   const params = useLocalSearchParams();
   const [successVisible, setSuccessVisible] = useState(false);
 
-  const [nome, setNome] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-
-  const dateTime = useMemo(
-    () => new Date().toLocaleString("pt-BR"),
-    []
+  const { state, actions } = useLeadEditViewModel(
+    String(params.id),
+    {
+      nome: String(params.nome ?? ""),
+      cpf: String(params.cpf ?? ""),
+      telefone: String(params.telefone ?? ""),
+    },
+    () => {
+      // callback chamado direto pelo ViewModel
+      setSuccessVisible(true);
+      setTimeout(() => {
+        router.replace("/ListLeadsScreen");
+      }, 1500);
+    }
   );
-
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/^(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{1})(\d{4})(\d{4})$/, "$1 $2-$3");
-  };
-
-  // 🔹 Inicializa dados
-  useEffect(() => {
-    if (params.nome) setNome(String(params.nome));
-    if (params.cpf) setCpf(formatCPF(String(params.cpf)));
-    if (params.telefone) setTelefone(formatPhone(String(params.telefone)));
-  }, []);
-
-  const handleSave = async () => {
-  setFieldErrors({});
-
-  try {
-    await actions.editLead({
-      id: String(params.id),
-      nome,
-      cpf: cpf.replace(/\D/g, ""),
-      telefone: telefone.replace(/\D/g, ""),
-    });
-
-    // ✅ Mostra feedback
-    setSuccessVisible(true);
-
-    // ⏱️ navega após mostrar mensagem
-    setTimeout(() => {
-      router.replace("/ListLeadsScreen");
-    }, 1500);
-
-  } catch (err: any) {
-    const msg = err.message.toLowerCase();
-    const errors: FieldErrors = {};
-
-    if (msg.includes("nome")) errors.nome = err.message;
-    if (msg.includes("cpf")) errors.cpf = err.message;
-    if (msg.includes("telefone")) errors.telefone = err.message;
-
-    setFieldErrors(errors);
-  }
-};
-
-
 
   return (
     <View style={styles.container}>
@@ -97,120 +41,62 @@ export default function EditView() {
 
       {/* FORM */}
       <View style={styles.card}>
-        {/* NOME */}
         <TextInput
           label="Nome completo"
-          value={nome}
-          onChangeText={(text) => {
-            setNome(text);
-            setFieldErrors((prev) => ({ ...prev, nome: undefined }));
-          }}
+          value={state.nome}
+          onChangeText={actions.setNome}
           mode="outlined"
-          error={!!fieldErrors.nome}
+          error={!!state.errors.nome}
           style={styles.input}
         />
-        {fieldErrors.nome && (
-          <Text style={styles.errorText}>{fieldErrors.nome}</Text>
-        )}
+        {state.errors.nome && <Text style={styles.errorText}>{state.errors.nome}</Text>}
 
-        {/* TELEFONE */}
         <TextInput
           label="Telefone"
-          value={telefone}
-          onChangeText={(text) => {
-            setTelefone(formatPhone(text));
-            setFieldErrors((prev) => ({ ...prev, telefone: undefined }));
-          }}
+          value={state.telefone}
+          onChangeText={actions.setTelefone}
           mode="outlined"
           keyboardType="phone-pad"
-          error={!!fieldErrors.telefone}
+          error={!!state.errors.telefone}
           style={styles.input}
         />
-        {fieldErrors.telefone && (
-          <Text style={styles.errorText}>{fieldErrors.telefone}</Text>
-        )}
+        {state.errors.telefone && <Text style={styles.errorText}>{state.errors.telefone}</Text>}
 
-        {/* CPF */}
         <TextInput
           label="CPF"
-          value={cpf}
-          onChangeText={(text) => {
-            setCpf(formatCPF(text));
-            setFieldErrors((prev) => ({ ...prev, cpf: undefined }));
-          }}
+          value={state.cpf}
+          onChangeText={actions.setCpf}
           mode="outlined"
           keyboardType="numeric"
-          error={!!fieldErrors.cpf}
+          error={!!state.errors.cpf}
           style={styles.input}
         />
-        {fieldErrors.cpf && (
-          <Text style={styles.errorText}>{fieldErrors.cpf}</Text>
-        )}
+        {state.errors.cpf && <Text style={styles.errorText}>{state.errors.cpf}</Text>}
 
         {state.loading ? (
           <ActivityIndicator />
         ) : (
-          <Button
-            mode="contained"
-            onPress={handleSave}
-            style={styles.saveBtn}
-          >
+          <Button mode="contained" onPress={actions.editLead} style={styles.saveBtn}>
             Salvar
           </Button>
         )}
       </View>
+
       <SuccessFeedbackCard
-  visible={successVisible}
-  onDismiss={() => setSuccessVisible(false)}
-  message="Lead atualizado com sucesso!"
-/>
-
-
+        visible={successVisible}
+        onDismiss={() => setSuccessVisible(false)}
+        message="Lead atualizado com sucesso!"
+      />
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F7F9FF",
-    padding: 24,
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 32,
-  },
-
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-
-  card: {
-    backgroundColor: "#FFF",
-    padding: 24,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E2E2E6",
-  },
-
-  input: {
-    marginBottom: 24,
-  },
-
-  saveBtn: {
-    marginTop: 16,
-    borderRadius: 50,
-  },
-  errorText: {
-  color: "#D32F2F",
-  marginTop: -18,
-  marginBottom: 16,
-  fontSize: 13,
-},
-
+  container: { flex: 1, backgroundColor: "#F7F9FF", padding: 24 },
+  header: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 32 },
+  headerTitle: { fontSize: 20, fontWeight: "600" },
+  card: { backgroundColor: "#FFF", padding: 24, borderRadius: 16, borderWidth: 1, borderColor: "#E2E2E6" },
+  input: { marginBottom: 24 },
+  saveBtn: { marginTop: 16, borderRadius: 50 },
+  errorText: { color: "#D32F2F", marginTop: -18, marginBottom: 16, fontSize: 13 },
 });
