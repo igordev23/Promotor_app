@@ -128,6 +128,7 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
 
       {/* Botão Principal - Iniciar/Encerrar Jornada */}
       <Button
+        testID="journey-toggle-button"
         mode="contained"
         style={styles.mainButton}
         contentStyle={styles.mainButtonContent}
@@ -196,6 +197,7 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
           style={styles.iconBox}
         />
         <Text
+          testID="list-leads-button"
           style={styles.actionText}
           onPress={handleNavigateToListLeads}
           accessibilityRole="button"

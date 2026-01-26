@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useLoginViewModel } from "../../viewmodel/useLoginViewModel";
 import { StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-
+const TEST_EMAIL = "promotor2@test.com";
+const TEST_PASSWORD = "12345678";
 
 
 export default function LoginView() {
@@ -15,14 +15,6 @@ export default function LoginView() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleLogin = async () => {
-    const success = await actions.login(email, password);
-
-    if (success) {
-      router.replace("/DashboardScreen");
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -33,10 +25,6 @@ export default function LoginView() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-
-
-
-
         <View style={styles.iconWrapper}>
           <MaterialIcons name="account-circle" size={110} color="#3F51B5" />
         </View>
@@ -45,6 +33,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
         <TextInput
+          testID="email-input"
           label="Digite seu e-mail"
           placeholder="exemplo@gmail.com"
           value={email}
@@ -55,6 +44,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>Senha</Text>
         <TextInput
+          testID="password-input"
           label="Digite sua senha"
           placeholder="********"
           value={password}
@@ -64,13 +54,12 @@ export default function LoginView() {
           style={styles.input}
         />
 
-             <Text
-        style={[styles.titleInput, styles.forgotPassword]}
-        onPress={() => router.push("/recoverPasswordScreen")}
-      >
-        Esqueceu a sua senha?
-      </Text>
-
+        <Text
+          style={[styles.titleInput, styles.forgotPassword]}
+          onPress={() => router.push("/recoverPasswordScreen")}
+        >
+          Esqueceu a sua senha?
+        </Text>
 
         {state.error && (
           <Text style={{ color: "red", marginBottom: 8 }}>
@@ -79,21 +68,21 @@ export default function LoginView() {
         )}
 
         <Button
+          testID="login-button"
           mode="contained"
-          onPress={handleLogin}
+          onPress={() => actions.loginAndNavigate(email, password)}
           loading={state.loading}
           disabled={state.loading}
           style={styles.button}
           contentStyle={{ paddingVertical: 6 }}
-
         >
           Entrar
         </Button>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
 
 
 const styles = StyleSheet.create({
