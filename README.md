@@ -231,33 +231,259 @@ Esses testes asseguram que o fluxo principal do aplicativo funciona conforme o e
 
 ---
 
+## 🎭 Testes E2E (End-to-End) com Playwright
+
+Testes automatizados que validam os fluxos completos da aplicação do ponto de vista do usuário, simulando interações reais com a interface gráfica.
+
+### 📝 Escopo dos Testes E2E
+
+O teste automatizado `core-flow.spec.ts` valida o **fluxo principal do promotor**:
+
+1. **Autenticação**: Login com credenciais válidas
+2. **Dashboard**: Acesso à tela principal após login
+3. **Iniciar Jornada**: Tentativa de ativar a jornada de trabalho
+4. **Navegação**: Acesso à tela de listagem de leads
+
+### 🛠️ Configuração do Playwright
+
+O projeto utiliza **Playwright** para testes E2E com as seguintes configurações:
+
+```typescript
+// playwright.config.ts
+{
+  testDir: './e2e',           // Diretório de testes
+  baseURL: 'http://localhost:8081',  // URL da aplicação
+  fullyParallel: true,        // Testes executados em paralelo
+  retries: 0,                 // Sem retentativas padrão
+  workers: undefined,         // Usa limite padrão
+  reporter: 'html',           // Relatório em HTML
+  webServer: {
+    command: 'npm run web',   // Inicia servidor automaticamente
+    url: 'http://localhost:8081',
+    timeout: 120 * 1000,      // 2 minutos para iniciar
+  }
+}
+```
+
+### 📊 Estrutura dos Testes
+
+```
+e2e/
+├── core-flow.spec.ts        # Teste do fluxo principal
+```
+
+### 🔍 Detalhes do Teste Principal
+
+**Arquivo**: `e2e/core-flow.spec.ts`
+
+**Descrição**: Valida o fluxo completo desde o login até a navegação para listagem de leads.
+
+**Passos executados**:
+
+1. **Login**:
+   - Preenche campo de email: `promotor2@test.com`
+   - Preenche campo de senha: `12345678`
+   - Clica em "Entrar"
+
+2. **Dashboard**:
+   - Verifica carregamento da tela do Dashboard
+   - Valida visibilidade do status da jornada
+   - Clica em "Iniciar Jornada" (se disponível)
+   - Aguarda processamento da requisição
+
+3. **Navegação**:
+   - Clica em "Listar Leads"
+   - Verifica se a página de listagem foi carregada
+
+**Timeout padrão**: 10 segundos por ação
+
+**Aguardo de requisições**: 2-3 segundos para processar mudanças de estado
+
+---
+
 ## ▶️ Como Executar os Testes
 
-### Executar todos os testes:
+### Testes Unitários e de Integração (Jest)
+
+#### Executar todos os testes:
 
 ```bash
 npm test
 ```
 
-### Executar apenas testes de integração:
+#### Executar apenas testes de integração:
 
 ```bash
 npm test integration
 ```
 
-### Executar testes com relatório de cobertura:
+#### Executar testes com relatório de cobertura:
 
 ```bash
 npm test -- --coverage
 ```
+
+### Testes E2E (Playwright)
+
+#### Executar todos os testes E2E:
+
+```bash
+npx playwright test
+```
+
+#### Executar em modo de visualização interativo:
+
+```bash
+npx playwright test --ui
+```
+
+#### Executar testes E2E com modo debug:
+
+```bash
+npx playwright test --debug
+```
+
+#### Executar um arquivo de teste específico:
+
+```bash
+npx playwright test e2e/core-flow.spec.ts
+```
+
+#### Executar um teste específico por nome:
+
+```bash
+npx playwright test -g "Deve realizar login"
+```
+
+#### Ver relatório HTML dos testes:
+
+```bash
+npx playwright show-report
+```
+
+#### Visualizar vídeos de teste gravados:
+
+Os vídeos dos testes são salvos em `test-results/` quando um teste falha. Acesse através do relatório HTML.
+
+---
+
+## 📋 Guia para Adicionar Novos Testes E2E
+
+### Estrutura Básica de um Teste
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('Descrição da funcionalidade', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup: Executado antes de cada teste
+    await page.goto('/');
+  });
+
+  test('Deve descrever o comportamento esperado', async ({ page }) => {
+    // Arrange: Preparar dados
+    const input = page.getByTestId('my-input');
+
+    // Act: Executar ações
+    await input.fill('texto');
+    await page.getByRole('button', { name: /submit/i }).click();
+
+    // Assert: Verificar resultado
+    await expect(page.getByText('sucesso')).toBeVisible();
+  });
+});
+```
+
+### Seletores Recomendados (em ordem de preferência)
+
+1. **Test IDs** (mais confiável):
+   ```typescript
+   page.getByTestId('element-id')
+   ```
+
+2. **Texto visível**:
+   ```typescript
+   page.getByText('Texto exato')
+   page.getByRole('button', { name: /regex/i })
+   ```
+
+3. **Placeholder (para inputs)**:
+   ```typescript
+   page.getByPlaceholder('Digite seu email')
+   ```
+
+4. **CSS Selector** (último recurso):
+   ```typescript
+   page.locator('selector')
+   ```
+
+### Boas Práticas para Testes E2E
+
+✅ **Faça**:
+- Aguarde elementos estarem visíveis antes de interagir
+- Use timeouts apropriados (10s para navegação, 5s para ações)
+- Escreva testes legíveis com descrições claras
+- Teste fluxos completos do usuário, não apenas componentes isolados
+- Use `test.beforeEach()` para setup comum
+- Adicione logs com `console.log()` para debug
+
+❌ **Evite**:
+- Timeouts muito curtos que causam flakiness
+- Testes que dependem um do outro
+- Seletores frágeis (classes dinâmicas, IDs sem testID)
+- Testes muito longos (divida em múltiplos testes)
+- Dados hardcoded (use arquivos de configuração)
+
+### Configurar testID em Componentes React
+
+Para melhorar a robustez dos testes, adicione `testID` aos componentes:
+
+```typescript
+// Exemplo com React Native Paper Button
+<Button
+  testID="submit-button"
+  mode="contained"
+  onPress={handleSubmit}
+>
+  Enviar
+</Button>
+```
+
+### Debugging de Testes
+
+Se um teste falhar:
+
+1. **Verifique o erro no relatório HTML**:
+   ```bash
+   npx playwright show-report
+   ```
+
+2. **Execute em modo debug**:
+   ```bash
+   npx playwright test --debug --headed
+   ```
+
+3. **Verifique o vídeo da falha**:
+   - Disponível em `test-results/` para testes falhados
+
+4. **Aumente o timeout temporariamente**:
+   ```typescript
+   await expect(element).toBeVisible({ timeout: 30000 });
+   ```
+
 ---
 
 ## 🏆 Critérios de Avaliação Atendidos
+
 **Arquitetura MVVM**
 Implementação correta do padrão MVVM, com separação clara entre as camadas View, ViewModel, UseCase e Repository, facilitando manutenção, testes e evolução do sistema.
 
 **Testes Automatizados**
-Aplicação consistente de testes unitários e testes de integração, garantindo a validação das regras de negócio, operações de CRUD e a comunicação entre as camadas do sistema.
+Aplicação consistente de testes unitários, testes de integração e testes E2E, garantindo:
+- Validação das regras de negócio
+- Operações de CRUD funcionando corretamente
+- Comunicação entre as camadas do sistema
+- Fluxos completos do usuário simulados através de testes E2E
 
 **Uso de Test-Driven Development (TDD)**
 Desenvolvimento de funcionalidades seguindo o ciclo RED → GREEN → REFACTOR, com evidências no histórico de commits e testes criados antes da implementação.
@@ -265,22 +491,28 @@ Desenvolvimento de funcionalidades seguindo o ciclo RED → GREEN → REFACTOR, 
 **Cobertura de Testes**
 Distribuição de testes conforme os requisitos da disciplina, com foco em:
 
-Testes unitários para lógica de negócio
-
-Testes de integração para fluxos principais da aplicação
+- Testes unitários para lógica de negócio
+- Testes de integração para fluxos principais da aplicação
+- Testes E2E para validar fluxos completos do usuário
 
 **Organização e Qualidade do Código**
 Estrutura de pastas modular, padronizada e coerente com a arquitetura proposta, favorecendo legibilidade, reutilização e boas práticas de engenharia de software.
 
 **Documentação Técnica**
-README completo e bem estruturado, contendo descrição do projeto, objetivos, tecnologias, estratégia de testes, instruções de execução e identificação dos integrantes do grupo.
+README completo e bem estruturado, contendo:
+- Descrição do projeto e objetivos
+- Tecnologias utilizadas
+- Estratégia de testes (unitários, integração e E2E)
+- Instruções de execução
+- Guia para adicionar novos testes
+- Identificação dos integrantes do grupo
 
 ---
 
 ## 📚 Considerações Finais
 O desenvolvimento deste aplicativo permitiu a aplicação prática dos conceitos abordados nas disciplinas de Programação para Dispositivos Móveis (PDM) e Engenharia de Software III, com ênfase na qualidade do software e na adoção de boas práticas de engenharia.
 
-A utilização de testes automatizados, aliada à estratégia em camadas e ao uso de Test-Driven Development (TDD), contribuiu para a construção de um sistema mais confiável, organizado e preparado para evolução futura.
+A utilização de testes automatizados em múltiplas camadas (unitários, integração e E2E), aliada à estratégia em camadas e ao uso de Test-Driven Development (TDD), contribuiu para a construção de um sistema mais confiável, organizado e preparado para evolução futura.
 
 Além de atender plenamente aos requisitos acadêmicos, o projeto apresenta uma solução funcional e realista para o controle de promotores de campo, demonstrando a integração eficaz entre teoria e prática no desenvolvimento de aplicações mobile.
 
