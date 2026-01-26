@@ -17,6 +17,7 @@ type UseRecoverPasswordViewModel = {
   actions: RecoverPasswordActions;
 };
 
+
 export function useRecoverPasswordViewModel(
   recoverPasswordUseCase: RecoverPasswordUseCase = new RecoverPasswordUseCase(authService)
 ): UseRecoverPasswordViewModel {

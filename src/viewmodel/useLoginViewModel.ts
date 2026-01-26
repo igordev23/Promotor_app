@@ -13,6 +13,8 @@ export type LoginActions = {
   logout: () => Promise<boolean>;
   clearError: () => string | null;
   checkAuthStatus: () => Promise<boolean>;
+
+  loginAndNavigate: (email: string, password: string) => Promise<void>;
 };
 
 export const useLoginViewModel = () => {
@@ -46,6 +48,14 @@ export const useLoginViewModel = () => {
 
 
 
+  const loginAndNavigate = async (email: string, password: string): Promise<void> => {
+    const success = await login(email, password);
+
+    if (success) {
+      router.replace("/DashboardScreen");
+    }
+  };
+
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
@@ -72,33 +82,18 @@ export const useLoginViewModel = () => {
     }
   };
 
-  if (ctx) {
-    return {
-      state: {
-        loading: ctx.state.loading,
-        error: ctx.state.error,
-        isAuthenticated: ctx.state.isAuthenticated,
-      },
-      actions: {
-        login: ctx.actions.login,
-        logout: ctx.actions.logout,
-        clearError: ctx.actions.clearError,
-        checkAuthStatus: ctx.actions.checkAuthStatus,
-      },
-    };
-  } else {
-    return {
-      state: {
-        loading,
-        error,
-        isAuthenticated,
-      },
-      actions: {
-        login,
-        logout,
-        clearError,
-        checkAuthStatus,
-      },
-    };
-  }
+  return {
+    state: {
+      loading,
+      error,
+      isAuthenticated,
+    },
+    actions: {
+      login,
+      logout,
+      loginAndNavigate,
+      clearError,
+      checkAuthStatus,
+    },
+  };
 };

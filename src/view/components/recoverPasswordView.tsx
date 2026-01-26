@@ -7,13 +7,7 @@ import { useRecoverPasswordViewModel } from "../../viewmodel/useRecoverPasswordV
 
 export default function RecoverPasswordView() {
   const { state, actions } = useRecoverPasswordViewModel();
-  const [email, setEmail] = useState("");
-  const router = useRouter();
-  const theme = useTheme();
-
-  const handleRecover = async () => {
-    await actions.recoverPassword(email);
-  };
+  const [email, setEmail] = useState<string>("");
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
@@ -34,9 +28,7 @@ export default function RecoverPasswordView() {
       />
 
       {state.error && (
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>
-          {state.error}
-        </Text>
+        <Text style={styles.errorText}>{state.error}</Text>
       )}
 
       {state.success && (
@@ -47,7 +39,7 @@ export default function RecoverPasswordView() {
 
       <Button
         mode="contained"
-        onPress={handleRecover}
+        onPress={() => actions.recoverPassword(email)}
         loading={state.loading}
         disabled={state.loading}
         style={styles.primaryButton}
@@ -55,18 +47,11 @@ export default function RecoverPasswordView() {
       >
         Enviar
       </Button>
-
-      <Button
-        mode="outlined"
-        onPress={() => router.back()}
-        style={styles.secondaryButton}
-        contentStyle={styles.buttonContent}
-      >
-        Cancelar
-      </Button>
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
