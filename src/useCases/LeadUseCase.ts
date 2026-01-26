@@ -1,4 +1,3 @@
-// src\useCases\LeadUseCase.ts
 import { ILeadRepository } from "../model/repositories/ILeadRepository";
 import { Lead } from "../model/entities/Lead";
 import { leadRepository } from "../model/repositories/leadRepository";
@@ -11,18 +10,21 @@ export class LeadUseCase {
     return this.repository.getAll();
   }
 
-  async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
-    this.validateLead(lead);
+ async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
+  this.validateLead(lead);
 
-    const normalizedLead: Omit<Lead, "id"> = {
-      ...lead,
-      cpf: lead.cpf.replace(/\D/g, ""),
-      telefone: lead.telefone.replace(/\D/g, ""),
-    };
+  const normalizedLead: Omit<Lead, "id"> = {
+    ...lead,
+    cpf: lead.cpf.replace(/\D/g, ""),
+    telefone: lead.telefone.replace(/\D/g, ""),
+  };
 
-    return this.repository.create(normalizedLead);
-  }
+  return this.repository.create(normalizedLead);
+}
 
+
+  // feat: implementa removeLead no LeadUseCase para passar no teste (GREEN)
+  // refactor: melhora validação no removeLead
   async removeLead(id: string): Promise<number | void> {
     if (!id) {
       throw new Error("ID do lead é obrigatório");
@@ -30,92 +32,51 @@ export class LeadUseCase {
     return this.repository.delete(id);
   }
 
+  // feat: implementa editLead no LeadUseCase para passar no teste (GREEN)
+  // refactor: organiza validações no editLead
   async editLead(id: string, data: Partial<Lead>): Promise<void> {
-    if (!id) {
-      throw new Error("ID do lead é obrigatório");
-    }
-
-    // Valida apenas os campos que estão sendo atualizados
-    this.validatePartialLead(data);
-
-    // Normaliza os campos que estão sendo atualizados
-    const normalizedData: Partial<Lead> = {
-      ...(data.nome !== undefined && { nome: data.nome.trim() }),
-      ...(data.cpf !== undefined && { cpf: data.cpf.replace(/\D/g, "") }),
-      ...(data.telefone !== undefined && {
-        telefone: data.telefone.replace(/\D/g, "")
-      }),
-    };
-
-    await this.repository.update(id, normalizedData);
+  if (!id) {
+    throw new Error("ID do lead é obrigatório");
   }
 
-  // Validação completa (para criação)
-  private validateLead(data: Omit<Lead, "id">): void {
-    if (!data.nome?.trim()) {
-      throw new ValidationError("nome", "Nome é obrigatório");
-    }
+  this.validateLead({
+    nome: data.nome ?? "",
+    cpf: data.cpf ?? "",
+    telefone: data.telefone ?? "",
+  });
 
-    const cleanCpf = data.cpf.replace(/\D/g, "");
-    if (!cleanCpf) {
-      throw new ValidationError("cpf", "CPF é obrigatório");
-    }
-    if (cleanCpf.length !== 11) {
-      throw new ValidationError("cpf", "CPF deve ter 11 dígitos");
-    }
+  await this.repository.update(id, data);
+}
 
-    const cleanPhone = data.telefone.replace(/\D/g, "");
-    if (!cleanPhone) {
-      throw new ValidationError("telefone", "Telefone é obrigatório");
-    }
-    if (cleanPhone.length !== 11) {
-      throw new ValidationError("telefone", "Telefone deve conter DDD + 9 dígitos");
-    }
-    if (cleanPhone.charAt(2) !== "9") {
-      throw new ValidationError(
-        "telefone",
-        "Telefone deve ser celular válido (começar com 9)"
-      );
-    }
+
+
+validateLead(data: Omit<Lead, "id">): void {
+  if (!data.nome?.trim()) {
+    throw new ValidationError("nome", "Nome é obrigatório");
   }
 
-  // Validação parcial (para edição)
-  private validatePartialLead(data: Partial<Lead>): void {
-    // Valida nome se estiver presente
-    if (data.nome !== undefined) {
-      if (!data.nome.trim()) {
-        throw new ValidationError("nome", "Nome não pode ser vazio");
-      }
-    }
-
-    // Valida CPF se estiver presente
-    if (data.cpf !== undefined) {
-      const cleanCpf = data.cpf.replace(/\D/g, "");
-      if (!cleanCpf) {
-        throw new ValidationError("cpf", "CPF não pode ser vazio");
-      }
-      if (cleanCpf.length !== 11) {
-        throw new ValidationError("cpf", "CPF deve ter 11 dígitos");
-      }
-    }
-
-    // Valida telefone se estiver presente
-    if (data.telefone !== undefined) {
-      const cleanPhone = data.telefone.replace(/\D/g, "");
-      if (!cleanPhone) {
-        throw new ValidationError("telefone", "Telefone não pode ser vazio");
-      }
-      if (cleanPhone.length !== 11) {
-        throw new ValidationError("telefone", "Telefone deve conter DDD + 9 dígitos");
-      }
-      if (cleanPhone.charAt(2) !== "9") {
-        throw new ValidationError(
-          "telefone",
-          "Telefone deve ser celular válido (começar com 9)"
-        );
-      }
-    }
+  const cleanCpf = data.cpf.replace(/\D/g, "");
+  if (!cleanCpf) {
+    throw new ValidationError("cpf", "CPF é obrigatório");
   }
+  if (cleanCpf.length !== 11) {
+    throw new ValidationError("cpf", "CPF deve ter 11 dígitos");
+  }
+
+  const cleanPhone = data.telefone.replace(/\D/g, "");
+  if (!cleanPhone) {
+    throw new ValidationError("telefone", "Telefone é obrigatório");
+  }
+  if (cleanPhone.length !== 11) {
+    throw new ValidationError("telefone", "Telefone deve conter DDD + 9 dígitos");
+  }
+  if (cleanPhone.charAt(2) !== "9") {
+    throw new ValidationError(
+      "telefone",
+      "Telefone deve ser celular válido (começar com 9)"
+    );
+  }
+}
 
   filterLeads(leads: Lead[], query: string): Lead[] {
     if (!query.trim()) {

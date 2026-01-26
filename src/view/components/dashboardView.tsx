@@ -1,132 +1,74 @@
-// src/view/components/dashboardView.tsx
 import React, { useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  TextStyle,
-  ViewStyle
-} from "react-native";
+import { View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { Text, Button, Card } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useDashboardViewModel } from "@/src/viewmodel/useDashboardViewModel";
 import { useLoginViewModel } from "@/src/viewmodel/useLoginViewModel";
 
-// Tipos para as propriedades do componente
-interface DashboardViewProps { }
-
-// Tipo para os estilos
-interface DashboardStyles {
-  container: ViewStyle;
-  header: ViewStyle;
-  headerTitle: TextStyle;
-  status: TextStyle;
-  mainButton: ViewStyle;
-  mainButtonContent: ViewStyle;
-  mainButtonLabel: TextStyle;
-  metricsRow: ViewStyle;
-  card: ViewStyle;
-  metricValue: TextStyle;
-  metricInfo: TextStyle;
-  actionRow: ViewStyle;
-  iconBox: ViewStyle;
-  actionText: TextStyle;
-  errorText: TextStyle;
-  userText: TextStyle;
-  timeText: TextStyle;
-  exitButton: ViewStyle;
-}
-
-// Função utilitária para formatação de tempo
-const formatElapsedTime = (milliseconds: number): string => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const padNumber = (num: number): string => String(num).padStart(2, "0");
-
-  return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)}`;
-};
-
-export default function DashboardView(_props: DashboardViewProps): React.ReactElement {
+export default function DashboardView() {
   const { state, actions } = useDashboardViewModel();
+
   const {
     userName,
     isWorking,
     totalLeads,
     loading,
     error,
-    elapsedMs
+    elapsedMs,
   } = state;
 
   const { loadData, toggleWorkStatus } = actions;
 
-  const { actions: loginActions } = useLoginViewModel();
-  const { logout } = loginActions;
-
-  // Carrega dados ao montar o componente
+  // Carrega dados ao abrir a tela
   useEffect(() => {
     loadData();
   }, []);
 
-  const handleLogout = async (): Promise<void> => {
+  const { actions: loginActions } = useLoginViewModel();
+  const { logout } = loginActions;
+
+
+  const handleLogout = async () => {
     await logout();
     router.replace("/loginScreen");
   };
 
-  const handleNavigateToRegisterLead = (): void => {
-    router.replace("/RegisterLeadScreen");
+  const formatElapsed = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   };
 
-  const handleNavigateToListLeads = (): void => {
-    router.push("/ListLeadsScreen");
-  };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={styles.container}>
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
-        <MaterialIcons
-          name="account-circle"
-          size={28}
-          color="#3F51B5"
-        />
+        <MaterialIcons name="account-circle" size={28} color="#3F51B5" />
       </View>
 
-      {/* Exibição do nome do usuário */}
-      {userName && (
-        <Text style={styles.userText}>
-          Olá, {userName}
-        </Text>
-      )}
-
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
-        <ActivityIndicator
-          size="large"
-          color="#3F51B5"
-          style={{ marginVertical: 20 }}
-        />
+        <ActivityIndicator size="large" color="#3F51B5" />
       )}
 
-      {/* Error State */}
+      {/* Erro */}
       {error && (
         <Text style={styles.errorText}>{error}</Text>
       )}
 
-      {/* Status da Jornada */}
-      <Text style={styles.status}>
-        Status da Jornada {isWorking ? "🟢" : "🔴"}
+      {/* Status */}
+      <Text style={styles.status} testID="journey-status">
+        Status da Jornada {isWorking ? "🟢 Ativa" : "🔴 Inativa"}
       </Text>
 
-      {/* Botão Principal - Iniciar/Encerrar Jornada */}
+      {/* Botão Iniciar / Encerrar */}
       <Button
         testID="journey-toggle-button"
         mode="contained"
@@ -135,44 +77,30 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
         labelStyle={styles.mainButtonLabel}
         onPress={toggleWorkStatus}
         disabled={loading}
-        accessibilityLabel={isWorking ? "Encerrar jornada de trabalho" : "Iniciar jornada de trabalho"}
       >
         {isWorking ? "Encerrar Jornada" : "Iniciar Jornada"}
       </Button>
 
-      {/* Tempo Ativo */}
-      {isWorking && (
-        <Text style={styles.timeText}>
-          Tempo ativo: {formatElapsedTime(elapsedMs)}
-        </Text>
-      )}
-
-      {/* Métricas */}
-      <View style={styles.metricsRow}>
+      {/* Cards */}
+     <View style={styles.metricsRow}> 
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.metricValue}>
-              {totalLeads}
-            </Text>
-            <Text style={styles.metricInfo}>
-              Leads Hoje
-            </Text>
+            <Text style={styles.metricValue}>{totalLeads}</Text>
+            <Text style={styles.metricInfo}>Leads Hoje</Text>
           </Card.Content>
         </Card>
 
         <Card style={styles.card}>
           <Card.Content>
             <Text style={styles.metricValue}>
-              {isWorking ? formatElapsedTime(elapsedMs) : "00:00:00"}
+              {isWorking ? formatElapsed(elapsedMs) : "00:00:00"}
             </Text>
-            <Text style={styles.metricInfo}>
-              Tempo Ativo
-            </Text>
+            <Text style={styles.metricInfo}>Tempo Ativo</Text>
           </Card.Content>
         </Card>
       </View>
 
-      {/* Ações */}
+      {/* Registrar Leads */}
       <View style={styles.actionRow}>
         <MaterialIcons
           name="person-add"
@@ -182,13 +110,13 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
         />
         <Text
           style={styles.actionText}
-          onPress={handleNavigateToRegisterLead}
-          accessibilityRole="button"
+          onPress={() => router.replace("/RegisterLeadScreen")}
         >
           Registrar Leads
         </Text>
       </View>
 
+      {/* Listar Leads */}
       <View style={styles.actionRow}>
         <MaterialIcons
           name="list-alt"
@@ -199,22 +127,19 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
         <Text
           testID="list-leads-button"
           style={styles.actionText}
-          onPress={handleNavigateToListLeads}
-          accessibilityRole="button"
+          onPress={() => router.push("/ListLeadsScreen")}
         >
           Listar Leads
         </Text>
       </View>
 
-      {/* Botão de Sair */}
+      {/* Sair */}
       <Button
         mode="contained"
-        style={[styles.mainButton, styles.exitButton]}
+        style={styles.mainButton}
         contentStyle={styles.mainButtonContent}
         labelStyle={styles.mainButtonLabel}
         onPress={handleLogout}
-        disabled={loading}
-        accessibilityLabel="Sair da aplicação"
       >
         Sair
       </Button>
@@ -222,117 +147,117 @@ export default function DashboardView(_props: DashboardViewProps): React.ReactEl
   );
 }
 
-const styles = StyleSheet.create<DashboardStyles>({
+const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#F7F9FF",
     padding: 24,
-    paddingTop: 40,
+    marginTop: 20
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 16
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1B1B1F",
+    fontSize: 20,
+    color: "#1B1B1F"
   },
   status: {
-    fontSize: 22,
-    fontWeight: "600",
+    fontSize: 25,
+    fontWeight: "700",
     color: "#3F51B5",
     textAlign: "center",
-    marginVertical: 32,
+    margin: 32,
   },
   mainButton: {
     alignSelf: "center",
     borderRadius: 50,
-    marginVertical: 16,
-    width: '55%',
+    marginTop: 24,
+    marginBottom: 32,
+    width: '55%',       // largura do botão
   },
+  
   mainButtonContent: {
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    paddingVertical: 10,  // altura do botão
+    paddingHorizontal: 2,
   },
+  
   mainButtonLabel: {
-    fontSize: 16,
+    fontSize: 18,     // tamanho da fonte
     fontWeight: "600",
   },
+  
   timeText: {
     textAlign: "center",
     color: "#1B1B1F",
-    fontSize: 14,
-    marginBottom: 6,
+    marginBottom: 6
   },
   metricsRow: {
+  
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 32,
+    marginVertical: 24
   },
   card: {
-    width: "46%",
-    backgroundColor: "#FFFFFF",
+    width: "44%",
+    backgroundColor: "#E2E2E6",
     borderRadius: 16,
-    padding: 16,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    padding: 15,
   },
   metricValue: {
     textAlign: "center",
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#3F51B5",
+    fontSize: 20,
+    fontWeight: "600"
   },
   metricInfo: {
     textAlign: "center",
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#666",
-    marginTop: 4,
+    fontSize: 18,
+    fontWeight: "400"
   },
   actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    paddingHorizontal: 8,
+    marginBottom: 24,
+    marginTop: 48,
   },
   iconBox: {
     backgroundColor: "#3F51B5",
-    padding: 16,
+    padding: 25,
     borderRadius: 12,
-    marginRight: 16,
+    marginRight: 12,
+    marginLeft: 30,
   },
   actionText: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 25,
+    fontWeight: "700",
     color: "#3F51B5",
-    flex: 1,
+    textAlign: "center",
+    marginTop: 3,
   },
+
+
   exitButton: {
-    marginTop: 32,
-    marginBottom: 48,
+    marginTop: "auto",
+    alignSelf: "center",
+    borderRadius: 50
   },
   userText: {
     fontSize: 16,
     fontWeight: "500",
     color: "#555",
-    marginBottom: 24,
+    marginBottom: 12,
     textAlign: "center",
   },
+
   errorText: {
     color: "#D32F2F",
     backgroundColor: "#FDECEA",
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
-    marginVertical: 16,
+    marginVertical: 12,
     textAlign: "center",
     fontSize: 14,
-    fontWeight: "500",
   },
 });
