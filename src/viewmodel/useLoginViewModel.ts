@@ -1,8 +1,6 @@
 import { useContext, useState } from "react";
 import { authService } from "../model/services/AuthService";
 import { AuthContext } from "../contexts/AuthContextBase";
-const TEST_EMAIL = "promotor2@test.com";
-const TEST_PASSWORD = "12345678";
 
 export type LoginState = {
   loading: boolean;

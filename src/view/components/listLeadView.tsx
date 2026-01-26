@@ -145,13 +145,30 @@ export default function ListarLeadsView() {
   });
 }
 
- return (
-  <View style={styles.container}>
-    {/* HEADER */}
-    <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
-        <Ionicons name="arrow-back" size={24} />
-      </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.replace("/DashboardScreen")}>
+          <Ionicons name="arrow-back" size={24} />
+        </TouchableOpacity>
+
+        <Text style={styles.title}>Listar Leads</Text>
+      </View>
+
+      {/* SEARCH */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={18} color="#777" />
+          <TextInput
+            testID="search-leads-input"
+            style={styles.input}
+            placeholder="Procure por Leads Registrados"
+            value={busca}
+            onChangeText={handleSearch}
+          />
+        </View>
+      </View>
 
       <Text style={styles.title}>Listar Leads</Text>
 
@@ -198,9 +215,23 @@ export default function ListarLeadsView() {
             />
           </View>
 
-          {!loading && (
-            <Text style={styles.countText}>
-              {leads.length} Leads encontrados
+      {/* LIST */}
+      <FlatList
+        data={leads}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        renderItem={({ item }) => (
+          <View style={styles.card} testID={`lead-item-${item.id}`}>
+            <View style={styles.cardTop}>
+              <Text style={styles.cardTitle}>{item.nome}</Text>
+
+              <TouchableOpacity onPress={() => handleEditLead(item)}>
+                <Ionicons name="pencil" size={20} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.cardInfo}>
+              Telefone 📞: {item.telefone}
             </Text>
           )}
         </>
