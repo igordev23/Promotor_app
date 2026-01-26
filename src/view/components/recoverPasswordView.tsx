@@ -9,7 +9,7 @@ export default function RecoverPasswordView() {
   const { state, actions } = useRecoverPasswordViewModel();
   const [email, setEmail] = useState<string>("");
   const theme = useTheme();
-
+  const router = useRouter();
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
       <Text style={[styles.title, { color: theme.colors.primary }]}>
@@ -47,6 +47,14 @@ export default function RecoverPasswordView() {
         contentStyle={styles.buttonContent}
       >
         Enviar
+      </Button>
+      <Button
+        mode="outlined"
+        onPress={() => router.push("/loginScreen")}
+        style={styles.secondaryButton}
+        contentStyle={styles.buttonContent}
+      >
+        Voltar
       </Button>
     </View>
   );
