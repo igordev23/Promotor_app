@@ -10,10 +10,18 @@ export class LeadUseCase {
     return this.repository.getAll();
   }
 
-  async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
-    this.validateLead(lead);
-    return this.repository.create(lead);
-  }
+ async createLead(lead: Omit<Lead, "id">): Promise<Lead> {
+  this.validateLead(lead);
+
+  const normalizedLead: Omit<Lead, "id"> = {
+    ...lead,
+    cpf: lead.cpf.replace(/\D/g, ""),
+    telefone: lead.telefone.replace(/\D/g, ""),
+  };
+
+  return this.repository.create(normalizedLead);
+}
+
 
   // feat: implementa removeLead no LeadUseCase para passar no teste (GREEN)
   // refactor: melhora validação no removeLead

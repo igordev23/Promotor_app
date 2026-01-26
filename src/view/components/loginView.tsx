@@ -7,7 +7,8 @@ import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-
+const TEST_EMAIL = "promotor2@test.com";
+const TEST_PASSWORD = "12345678";
 
 
 export default function LoginView() {
@@ -45,6 +46,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>E-mail/Nome de Usuário</Text>
         <TextInput
+          testID="email-input"
           label="Digite seu e-mail"
           placeholder="exemplo@gmail.com"
           value={email}
@@ -55,6 +57,7 @@ export default function LoginView() {
 
         <Text style={styles.titleInput}>Senha</Text>
         <TextInput
+          testID="password-input"
           label="Digite sua senha"
           placeholder="********"
           value={password}
@@ -79,6 +82,7 @@ export default function LoginView() {
         )}
 
         <Button
+          testID="login-button"
           mode="contained"
           onPress={handleLogin}
           loading={state.loading}
