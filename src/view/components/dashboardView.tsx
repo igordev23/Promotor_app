@@ -1,74 +1,32 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { Text, Button, Card } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useDashboardViewModel } from "@/src/viewmodel/useDashboardViewModel";
-import { useLoginViewModel } from "@/src/viewmodel/useLoginViewModel";
+import { formatElapsed } from "@/src/utils/formatElapsed";
+import { useRouter } from "expo-router"; // <-- IMPORT CORRETO
 
 export default function DashboardView() {
   const { state, actions } = useDashboardViewModel();
-
-  const {
-    userName,
-    isWorking,
-    totalLeads,
-    loading,
-    error,
-    elapsedMs,
-  } = state;
-
-  const { loadData, toggleWorkStatus } = actions;
-
-  // Carrega dados ao abrir a tela
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const { actions: loginActions } = useLoginViewModel();
-  const { logout } = loginActions;
-
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace("/loginScreen");
-  };
-
-  const formatElapsed = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  };
-
+  const { isWorking, totalLeads, loading, error, elapsedMs, userName } = state;
+  const { toggleWorkStatus, logout } = actions;
+  const router = useRouter();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
         <MaterialIcons name="account-circle" size={28} color="#3F51B5" />
       </View>
 
-      {/* Loading */}
-      {loading && (
-        <ActivityIndicator size="large" color="#3F51B5" />
-      )}
+      {userName && <Text style={styles.userText}>Olá, {userName}</Text>}
+      {loading && <ActivityIndicator size="large" color="#3F51B5" />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* Erro */}
-      {error && (
-        <Text style={styles.errorText}>{error}</Text>
-      )}
-
-      {/* Status */}
       <Text style={styles.status} testID="journey-status">
         Status da Jornada {isWorking ? "🟢 Ativa" : "🔴 Inativa"}
       </Text>
 
-      {/* Botão Iniciar / Encerrar */}
       <Button
         testID="journey-toggle-button"
         mode="contained"
@@ -81,8 +39,7 @@ export default function DashboardView() {
         {isWorking ? "Encerrar Jornada" : "Iniciar Jornada"}
       </Button>
 
-      {/* Cards */}
-     <View style={styles.metricsRow}> 
+      <View style={styles.metricsRow}>
         <Card style={styles.card}>
           <Card.Content>
             <Text style={styles.metricValue}>{totalLeads}</Text>
@@ -100,52 +57,34 @@ export default function DashboardView() {
         </Card>
       </View>
 
-      {/* Registrar Leads */}
       <View style={styles.actionRow}>
-        <MaterialIcons
-          name="person-add"
-          size={28}
-          color="#fff"
-          style={styles.iconBox}
-        />
-        <Text
-          style={styles.actionText}
-          onPress={() => router.replace("/RegisterLeadScreen")}
-        >
+        <MaterialIcons name="person-add" size={28} color="#fff" style={styles.iconBox} />
+        <Text style={styles.actionText} onPress={() => router.replace("/RegisterLeadScreen")}>
           Registrar Leads
         </Text>
       </View>
 
-      {/* Listar Leads */}
       <View style={styles.actionRow}>
-        <MaterialIcons
-          name="list-alt"
-          size={28}
-          color="#fff"
-          style={styles.iconBox}
-        />
-        <Text
-          testID="list-leads-button"
-          style={styles.actionText}
-          onPress={() => router.push("/ListLeadsScreen")}
-        >
+        <MaterialIcons name="list-alt" size={28} color="#fff" style={styles.iconBox} />
+        <Text style={styles.actionText} onPress={() => router.push("/ListLeadsScreen")}>
           Listar Leads
         </Text>
       </View>
 
-      {/* Sair */}
       <Button
         mode="contained"
-        style={styles.mainButton}
+        style={[styles.mainButton, styles.exitButton]}
         contentStyle={styles.mainButtonContent}
         labelStyle={styles.mainButtonLabel}
-        onPress={handleLogout}
+        onPress={logout}
+        disabled={loading}
       >
         Sair
       </Button>
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

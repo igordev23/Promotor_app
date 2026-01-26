@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { authService } from "../model/services/AuthService";
 import { AuthContext } from "../contexts/AuthContextBase";
-
+import { router } from "expo-router";
 export type LoginState = {
   loading: boolean;
   error: string | null;

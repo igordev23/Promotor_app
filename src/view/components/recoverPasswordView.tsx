@@ -8,6 +8,7 @@ import { useRecoverPasswordViewModel } from "../../viewmodel/useRecoverPasswordV
 export default function RecoverPasswordView() {
   const { state, actions } = useRecoverPasswordViewModel();
   const [email, setEmail] = useState<string>("");
+  const theme = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>

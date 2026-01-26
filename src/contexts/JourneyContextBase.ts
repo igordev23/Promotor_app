@@ -18,7 +18,7 @@ export type JourneyActions = {
 export type JourneyContextType = {
   state: JourneyState;
   actions: JourneyActions;
+  setState: (state: Partial<JourneyState>) => void;
 };
 
 export const JourneyContext = createContext<JourneyContextType | null>(null);
-

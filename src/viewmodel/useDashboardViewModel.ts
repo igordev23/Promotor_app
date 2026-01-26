@@ -1,5 +1,7 @@
-import { useContext } from "react";
+import { useContext, useEffect, useCallback } from "react";
 import { JourneyContext } from "../contexts/JourneyContextBase";
+import { authService } from "../model/services/AuthService";
+import { router } from "expo-router";
 
 export type DashboardState = {
   userName: string;
@@ -12,8 +14,9 @@ export type DashboardState = {
 };
 
 export type DashboardActions = {
-  loadData: () => Promise<number | void>;
-  toggleWorkStatus: () => Promise<number | void>;
+  loadData: () => Promise<void>;
+  toggleWorkStatus: () => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 export const useDashboardViewModel = (): {
@@ -28,8 +31,36 @@ export const useDashboardViewModel = (): {
     );
   }
 
-  return {
-    state: ctx.state,
-    actions: ctx.actions,
-  };
+  const { state, actions, setState } = ctx;
+
+  // Atualiza o tempo de jornada ativa a cada segundo
+  useEffect(() => {
+    let interval: number | undefined;
+    if (state.isWorking && state.activeSince) {
+      const update = () =>
+        setState({ elapsedMs: Date.now() - state.activeSince! });
+      update();
+      interval = setInterval(update, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [state.isWorking, state.activeSince, setState]);
+
+  // Carrega dados ao montar
+  useEffect(() => {
+    actions.loadData();
+  }, []);
+
+  // Função de logout
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+      router.replace("/loginScreen");
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+    }
+  }, []);
+
+  return { state, actions: { ...actions, logout } };
 };
