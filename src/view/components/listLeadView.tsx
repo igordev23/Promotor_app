@@ -17,7 +17,7 @@ import { Lead } from "@/src/model/entities/Lead";
 import { useListLeadsViewModel } from "@/src/viewmodel/useListLeadsViewModel";
 import { IListLeadsViewModelReturn } from "@/src/viewmodel/types/ListLeadsTypes";
 import { SuccessFeedbackCard } from "../components/SuccessSnackbar";
-import { ConfirmDelete } from "./confirm";
+import { ConfirmDelete } from "./Confirmcard";
 
 const ListarLeadsView: FC = () => {
   const router = useRouter();
