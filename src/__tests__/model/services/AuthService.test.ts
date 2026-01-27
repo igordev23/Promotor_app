@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import supabase from "../../../config/supabase";
 import { AuthService } from "../../../model/services/AuthService";
+import axios from "axios";
 
 jest.spyOn(console, "error").mockImplementation(() => { });
 
@@ -10,36 +10,43 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: jest.fn(),
 }));
 
-jest.mock("../../../config/supabase", () => ({
-    auth: {
-        signInWithPassword: jest.fn(),
-        signOut: jest.fn(),
-        getUser: jest.fn(),
-    },
-}));
+jest.mock("axios", () => {
+    const api = {
+        post: jest.fn(),
+        get: jest.fn(),
+        interceptors: {
+            request: { use: jest.fn() },
+            response: { use: jest.fn() },
+        },
+    };
+    return {
+        __mockApi: api,
+        default: { create: () => api },
+        create: () => api,
+    };
+});
 
 describe("AuthService", () => {
     const service = new AuthService();
+    const mockApi = (axios as any).__mockApi;
 
     it("deve retornar true no login com sucesso", async () => {
-        (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
-            data: { session: { access_token: "token" } },
-            error: null,
+        mockApi.post.mockResolvedValue({
+            data: { accessToken: "token" },
         });
 
-        const result = await service.login("test@email.com", "123");
+        const result = await service.login("promotor@test.com", "12345678");
 
         expect(result).toBe(true);
         expect(AsyncStorage.setItem).toHaveBeenCalled();
     });
 
     it("deve retornar false no login com erro", async () => {
-        (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+        mockApi.post.mockResolvedValue({
             data: {},
-            error: true,
         });
 
-        const result = await service.login("test@email.com", "123");
+        const result = await service.login("promotor@test.com", "12345678");
 
         expect(result).toBe(false);
     });
@@ -59,16 +66,14 @@ describe("AuthService", () => {
     });
 
     it("deve retornar usuário autenticado", async () => {
-        (supabase.auth.getUser as jest.Mock).mockResolvedValue({
-            data: {
-                user: { id: "1", email: "test@email.com" },
-            },
+        mockApi.get.mockResolvedValue({
+            data: { id: "1", email: "promotor@test.com" },
         });
 
         const result = await service.getUser();
 
         expect(result?.id).toBe("1");
-        expect(result?.email).toBe("test@email.com");
+        expect(result?.email).toBe("promotor@test.com");
     });
 
 });

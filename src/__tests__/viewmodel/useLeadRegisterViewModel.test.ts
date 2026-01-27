@@ -1,19 +1,17 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useLeadRegisterViewModel } from "../../viewmodel/useLeadRegisterViewModel";
 import { Lead } from "../../model/entities/Lead";
-import { leadRepository } from "../../model/repositories/leadRepository";
+import { leadUseCase } from "../../useCases/LeadUseCase";
+import { ValidationError } from "../../errors/ValidationError";
 
-jest.mock("../../model/repositories/leadRepository", () => ({
-  leadRepository: {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
+jest.mock("../../useCases/LeadUseCase", () => ({
+  leadUseCase: {
+    createLead: jest.fn(),
+    parseError: (err: any) => (err instanceof Error ? err.message : String(err)),
   },
 }));
 
-const mockRepo = leadRepository as jest.Mocked<typeof leadRepository>;
+const mockUseCase = leadUseCase as jest.Mocked<typeof leadUseCase>;
 
 describe("useLeadRegisterViewModel", () => {
   beforeEach(() => {
@@ -21,8 +19,6 @@ describe("useLeadRegisterViewModel", () => {
   });
 
   test("should initialize with default state", async () => {
-    mockRepo.getAll.mockResolvedValue([]);
-
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await waitFor(() => {
@@ -37,90 +33,103 @@ describe("useLeadRegisterViewModel", () => {
       id: "1",
       nome: "Valid Lead",
       cpf: "12345678900",
-      telefone: "123456789",
+      telefone: "11912345678",
     };
 
-    mockRepo.create.mockResolvedValue(newLead);
-    mockRepo.getAll.mockResolvedValue([newLead]);
+    mockUseCase.createLead.mockResolvedValue(newLead);
 
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "Valid Lead",
-        cpf: "12345678900",
-        telefone: "123456789",
-      });
+      result.current.actions.updateField("nome", "Valid Lead");
+      result.current.actions.updateField("cpf", "12345678900");
+      result.current.actions.updateField("telefone", "11912345678");
+      await result.current.actions.registerLead();
     });
 
     await waitFor(() => {
       expect(result.current.state.loading).toBe(false);
     });
 
-    expect(mockRepo.create).toHaveBeenCalledTimes(1);
+    expect(mockUseCase.createLead).toHaveBeenCalledTimes(1);
     expect(result.current.state.error).toBeNull();
+    expect(result.current.state.fieldErrors).toEqual({});
+    expect(result.current.state.success).toBe(true);
   });
 
   test("should fail if name is empty", async () => {
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "",
-        cpf: "12345678900",
-        telefone: "123456789",
-      });
+      result.current.actions.updateField("nome", "");
+      result.current.actions.updateField("cpf", "12345678900");
+      result.current.actions.updateField("telefone", "11912345678");
+      mockUseCase.createLead.mockRejectedValueOnce(
+        new ValidationError("nome", "Nome é obrigatório")
+      );
+      await result.current.actions.registerLead();
     });
 
-    expect(result.current.state.error).toBe("Nome é obrigatório");
-    expect(mockRepo.create).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(result.current.state.fieldErrors.nome).toBe("Nome é obrigatório");
+    });
+    expect(mockUseCase.createLead).toHaveBeenCalledTimes(1);
   });
 
   test("should fail if cpf is empty", async () => {
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "Test",
-        cpf: "",
-        telefone: "123456789",
-      });
+      result.current.actions.updateField("nome", "Test");
+      result.current.actions.updateField("cpf", "");
+      result.current.actions.updateField("telefone", "11912345678");
+      mockUseCase.createLead.mockRejectedValueOnce(
+        new ValidationError("cpf", "CPF é obrigatório")
+      );
+      await result.current.actions.registerLead();
     });
 
-    expect(result.current.state.error).toBe("CPF é obrigatório");
+    await waitFor(() => {
+      expect(result.current.state.fieldErrors.cpf).toBe("CPF é obrigatório");
+    });
   });
 
   test("should fail if cpf is invalid (length)", async () => {
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "Test",
-        cpf: "123",
-        telefone: "123456789",
-      });
+      result.current.actions.updateField("nome", "Test");
+      result.current.actions.updateField("cpf", "123");
+      result.current.actions.updateField("telefone", "11912345678");
+      mockUseCase.createLead.mockRejectedValueOnce(
+        new ValidationError("cpf", "CPF deve ter 11 dígitos")
+      );
+      await result.current.actions.registerLead();
     });
 
-    expect(result.current.state.error).toBe("CPF deve ter 11 dígitos");
+    await waitFor(() => {
+      expect(result.current.state.fieldErrors.cpf).toBe("CPF deve ter 11 dígitos");
+    });
   });
 
   test("should handle repository error when registering lead", async () => {
-    mockRepo.create.mockRejectedValue(new Error("Network error"));
+    mockUseCase.createLead.mockRejectedValue(new Error("Network error"));
 
     const { result } = renderHook(() => useLeadRegisterViewModel());
 
     await act(async () => {
-      await result.current.actions.registerLead({
-        nome: "Test",
-        cpf: "12345678900",
-        telefone: "123456789",
-      });
+      result.current.actions.updateField("nome", "Test");
+      result.current.actions.updateField("cpf", "12345678900");
+      result.current.actions.updateField("telefone", "11912345678");
+      await result.current.actions.registerLead();
     });
 
     await waitFor(() => {
       expect(result.current.state.loading).toBe(false);
     });
 
-    expect(result.current.state.error).toBe("Network error");
+    await waitFor(() => {
+      expect(result.current.state.error).toBe("Network error");
+    });
   });
 });

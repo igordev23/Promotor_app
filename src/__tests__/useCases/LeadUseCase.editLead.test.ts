@@ -18,7 +18,8 @@ describe("TDD - LeadUseCase.editLead", () => {
 
     const data: Partial<Lead> = {
       nome: "Lead Editado",
-      telefone: "99999-9999",
+      cpf: "12345678900",
+      telefone: "11999999999",
     };
 
     await useCase.editLead("1", data);
