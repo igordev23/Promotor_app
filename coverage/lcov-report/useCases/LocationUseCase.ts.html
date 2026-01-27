@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">52.63% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>10/19</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.66% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/18</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">56.25% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,10 +106,10 @@
 <a name='L41'></a><a href='#L41'>41</a>
 <a name='L42'></a><a href='#L42'>42</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
@@ -129,22 +129,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { ILocationRepository } from "../model/repositories/ILocationRepository";
 import { Location } from "../model/entities/Location";
 import { LocationRepository } from "../model/repositories/LocationRepository";
@@ -170,17 +170,17 @@ export class LocationUseCase {
   }
 &nbsp;
   parseError(err: unknown, fallback = "Ocorreu um erro"): string {
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!err) <span class="cstat-no" title="statement not covered" >return fallback;</span>
-    <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof err === "string") return err;
-<span class="cstat-no" title="statement not covered" >    if (err instanceof Error) <span class="cstat-no" title="statement not covered" >return err.message || fallback;</span></span>
-<span class="cstat-no" title="statement not covered" >    if (typeof err === "object" &amp;&amp; err !== null &amp;&amp; "message" in (err as any)) {</span>
-      const m = (<span class="cstat-no" title="statement not covered" >err as any).message;</span>
-<span class="cstat-no" title="statement not covered" >      return typeof m === "string" ? m : fallback;</span>
+    if (!err) return fallback;
+    if (typeof err === "string") return err;
+    if (err instanceof Error) return err.message || <span class="branch-1 cbranch-no" title="branch not covered" >fallback;</span>
+    if (typeof err === "object" &amp;&amp; err !== null &amp;&amp; "message" in (err as any)) {
+      const m = (err as any).message;
+      return typeof m === "string" ? m : <span class="branch-1 cbranch-no" title="branch not covered" >fallback;</span>
     }
-<span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      return JSON.stringify(err) || fallback;</span>
+    try {
+      return JSON.stringify(err) || <span class="branch-1 cbranch-no" title="branch not covered" >fallback;</span>
     } catch {
-<span class="cstat-no" title="statement not covered" >      return fallback;</span>
+      return fallback;
     }
   }
 }
@@ -193,7 +193,7 @@ export const locationUseCase = new LocationUseCase(new LocationRepository());
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-18T00:00:58.588Z
+                at 2026-01-27T15:57:03.029Z
             </div>
         <script src="../prettify.js"></script>
         <script>

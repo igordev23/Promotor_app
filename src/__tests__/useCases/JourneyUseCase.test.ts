@@ -46,4 +46,30 @@ describe("JourneyUseCase", () => {
 
     expect(message).toBe("Erro de teste");
   });
+
+  it("deve retornar fallback quando erro for null", () => {
+  const message = useCase.parseError(null);
+  expect(message).toBe("Ocorreu um erro");
+});
+
+it("deve retornar a string quando erro for string", () => {
+  const message = useCase.parseError("erro simples");
+  expect(message).toBe("erro simples");
+});
+
+
+it("deve retornar message quando erro for objeto com message", () => {
+  const error = { message: "Erro da API" };
+  const message = useCase.parseError(error);
+
+  expect(message).toBe("Erro da API");
+});
+
+it("deve retornar JSON.stringify quando erro for objeto sem message", () => {
+  const error = { status: 500 };
+  const message = useCase.parseError(error);
+
+  expect(message).toBe(JSON.stringify(error));
+});
+
 });

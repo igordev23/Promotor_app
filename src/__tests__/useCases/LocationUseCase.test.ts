@@ -61,4 +61,41 @@ describe("LocationUseCase", () => {
 
         expect(message).toBe("erro");
     });
+
+    it("deve retornar fallback quando erro for null", () => {
+        const message = useCase.parseError(null);
+        expect(message).toBe("Ocorreu um erro");
+    });
+
+    it("deve retornar message quando erro for instancia de Error", () => {
+        const error = new Error("Erro padrão");
+        const message = useCase.parseError(error);
+
+        expect(message).toBe("Erro padrão");
+    });
+
+    it("deve retornar message quando erro for objeto com message", () => {
+        const error = { message: "Erro do backend" };
+        const message = useCase.parseError(error);
+
+        expect(message).toBe("Erro do backend");
+    });
+
+    it("deve retornar JSON.stringify quando erro for objeto sem message", () => {
+        const error = { code: 500 };
+        const message = useCase.parseError(error);
+
+        expect(message).toBe(JSON.stringify(error));
+    });
+    
+    it("deve retornar fallback quando JSON.stringify falhar", () => {
+        const circular: any = {};
+        circular.self = circular; // causa erro no stringify
+
+        const message = useCase.parseError(circular, "fallback");
+
+        expect(message).toBe("fallback");
+    });
+
+
 });
