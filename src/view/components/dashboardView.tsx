@@ -57,15 +57,15 @@ export default function DashboardView() {
         </Card>
       </View>
 
-      <View style={styles.actionRow}>
-        <MaterialIcons name="person-add" size={28} color="#fff" style={styles.iconBox} />
+     <View style={styles.actionRow}>
+        <MaterialIcons name="person-add" size={28} color="#fff" style={styles.iconBox} onPress={() => router.replace("/RegisterLeadScreen")} />
         <Text style={styles.actionText} onPress={() => router.replace("/RegisterLeadScreen")}>
           Registrar Leads
         </Text>
       </View>
 
       <View style={styles.actionRow}>
-        <MaterialIcons name="list-alt" size={28} color="#fff" style={styles.iconBox} />
+        <MaterialIcons name="list-alt" size={28} color="#fff" style={styles.iconBox} onPress={() => router.push("/ListLeadsScreen")} />
         <Text style={styles.actionText} onPress={() => router.push("/ListLeadsScreen")}>
           Listar Leads
         </Text>

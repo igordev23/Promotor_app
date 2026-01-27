@@ -11,64 +11,29 @@ export interface IListLeadsState {
     readonly loading: boolean;
     readonly selectedLeads: ReadonlyArray<string>;
     readonly busca: string;
+
+    // ✅ Adicionado para feedback
+    readonly successMessage: string | null;
 }
+
 
 /**
  * Ações disponíveis na ViewModel
  * Todos os tipos de retorno são explícitos
  */
 export interface IListLeadsActions {
-    /**
-     * Carrega todos os leads do repositório
-     * @throws Error se falhar ao carregar
-     */
     loadLeads(): Promise<void>;
-
-    /**
-     * Limpa a mensagem de erro
-     */
     clearError(): void;
-
-    /**
-     * Filtra leads por query sem alterar originalLeads
-     * @param query - Texto de busca
-     */
     searchLeads(query: string): void;
-
-    /**
-     * Reseta o filtro para mostrar todos os leads
-     */
     resetFilter(): void;
-
-    /**
-     * Remove um lead específico
-     * @param id - ID do lead a remover
-     * @throws Error se falhar na remoção
-     */
     removeLead(id: string): Promise<void>;
-
-    /**
-     * Alterna seleção de um lead
-     * @param id - ID do lead
-     */
     toggleSelectLead(id: string): void;
-
-    /**
-     * Seleciona/desseleciona todos os leads
-     */
     selectAll(): void;
-
-    /**
-     * Remove todos os leads selecionados
-     * @throws Error se falhar em alguma remoção
-     */
     removeSelected(): Promise<void>;
-
-    /**
-     * Atualiza a query de busca e filtra em tempo real
-     * @param query - Texto de busca
-     */
     updateSearchQuery(query: string): void;
+
+    // ✅ Adicionado para limpar feedback
+    clearSuccessMessage(): void;
 }
 
 /**
